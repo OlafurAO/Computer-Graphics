@@ -1,3 +1,5 @@
+from opengl.gl import *;
+
 def main():
     pass
 
