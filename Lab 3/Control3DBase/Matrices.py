@@ -132,9 +132,11 @@ class ViewMatrix:
         self.u.normalize();
         self.v = self.n.cross(self.u);
 
+    # travel along the z-axis
     def slide(self, del_u, del_v, del_n):
         self.eye += self.u * del_u + self.v * del_v + self.n * del_n;
 
+    # rotate around the z-axis
     def roll(self, angle):
         c = cos(angle);
         s = sin(angle);
@@ -153,7 +155,6 @@ class ViewMatrix:
 
 # The ProjectionMatrix class builds transformations concerning
 # the camera's "lens"
-
 class ProjectionMatrix:
     def __init__(self):
         self.left = -1
