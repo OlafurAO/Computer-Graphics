@@ -49,6 +49,44 @@ class ModelMatrix:
                         0, 0, 0, 1];
         self.add_transformation(other_matrix)
 
+    def add_rotation_x(self, angle):
+        c = cos(angle); #angle * pi / 180.0 for degrees, otherwise it's in radians
+        s = sin(angle);
+
+        other_matrix = [1, 0,  0, 0,
+                        0, c, -s, 0,
+                        0, s,  c, 0,
+                        0, 0,  0, 1];
+        self.add_transformation(other_matrix)
+
+    def add_rotation_y(self, angle):
+        c = cos(angle); #angle * pi / 180.0 for degrees, otherwise it's in radians
+        s = sin(angle);
+
+        other_matrix = [c, 0, s, 0,
+                        0, 1, 0, 0,
+                       -s, 0, c, 0,
+                        0, 0, 0, 1];
+        self.add_transformation(other_matrix)
+
+    def add_rotation_z(self, angle):
+        c = cos(angle); #angle * pi / 180.0 for degrees, otherwise it's in radians
+        s = sin(angle);
+
+        other_matrix = [c, -s, 0, 0,
+                        s,  c, 0, 0,
+                        0,  0, 1, 0,
+                        0,  0, 0, 1];
+        self.add_transformation(other_matrix)
+
+    def add_scale(self, x, y, z):
+        other_matrix = [x, 0, 0, 0,
+                        0, y, 0, 0,
+                        0, 0, z, 0,
+                        0, 0, 0, 1];
+        self.add_transformation(other_matrix)
+
+
 
     ## MAKE OPERATIONS TO ADD TRANLATIONS, SCALES AND ROTATIONS ##
     # ---
@@ -86,8 +124,24 @@ class ViewMatrix:
         self.v = Vector(0, 1, 0)
         self.n = Vector(0, 0, 1)
 
-    ## MAKE OPERATIONS TO ADD LOOK, SLIDE, PITCH, YAW and ROLL ##
-    # ---
+    def look(self, eye, center, up):
+        self.eye = eye
+        self.n = (eye - center);
+        self.n.normalize();
+        self.u = up.cross(self.n);
+        self.u.normalize();
+        self.v = self.n.cross(self.u);
+
+    def slide(self, del_u, del_v, del_n):
+        self.eye += self.u * del_u + self.v * del_v + self.n * del_n;
+
+    def roll(self, angle):
+        c = cos(angle);
+        s = sin(angle);
+
+        tmp_u = self.u * c + self.v * s;
+        self.v = self.u * -s + self.v * c;
+        self.u = tmp_u;
 
     def get_matrix(self):
         minusEye = Vector(-self.eye.x, -self.eye.y, -self.eye.z)
@@ -111,8 +165,14 @@ class ProjectionMatrix:
 
         self.is_orthographic = True
 
-    ## MAKE OPERATION TO SET PERSPECTIVE PROJECTION (don't forget to set is_orthographic to False) ##
-    # ---
+    def set_perspective(self, field_of_view, aspect_ratio, near, far):
+        self.near = near;
+        self.far = far;
+        self.top = near * tan(field_of_view / 2);
+        self.bottom = -self.top;
+        self.right = self.top = aspect_ratio;
+        self.left = -self.right;
+        self.is_orthographic = False
 
     def set_orthographic(self, left, right, bottom, top, near, far):
         self.left = left
@@ -138,28 +198,18 @@ class ProjectionMatrix:
                     0,0,0,1]
 
         else:
-            pass
-            # Set up a matrix for a Perspective projection
-            ###  Remember that it's a non-linear transformation   ###
-            ###  so the bottom row is different                   ###
+            A = (2 * self.near) / (self.right - self.left)
+            B = (self.right + self.left) / (self.right - self.left)
+            C = (2 * self.near) / (self.top - self.bottom)
+            D = (self.top + self.bottom) / (self.top - self.bottom)
+            E = -(self.far + self.near) / (self.far - self.near)
+            F = -(2 * self.far + self.near) / (self.far - self.near)
 
 
-
-# The ProjectionViewMatrix returns a hardcoded matrix
-# that is just used to get something to send to the
-# shader before you properly implement the ViewMatrix
-# and ProjectionMatrix classes.
-# Feel free to throw it away afterwards!
-
-class ProjectionViewMatrix:
-    def __init__(self):
-        pass
-
-    def get_matrix(self):
-        return [ 0.45052942369783683,  0.0,  -0.15017647456594563,  0.0,
-                -0.10435451285616304,  0.5217725642808152,  -0.3130635385684891,  0.0,
-                -0.2953940042189954,  -0.5907880084379908,  -0.8861820126569863,  3.082884480118567,
-                -0.2672612419124244,  -0.5345224838248488,  -0.8017837257372732,  3.7416573867739413 ]
+            return [A, 0,  B, 0,
+                    0, C,  D, 0,
+                    0, 0,  E, F,
+                    0, 0, -1, 0]
 
 
 # IDEAS FOR OPERATIONS AND TESTING:
