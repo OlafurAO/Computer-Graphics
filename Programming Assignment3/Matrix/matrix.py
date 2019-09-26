@@ -3,7 +3,10 @@ from Objects.objects import *;
 
 class Model_Matrix:
     def __init__(self):
-        self.reset_matrix();
+        self.model_matrix = [1, 0, 0, 0,
+                             0, 1, 0, 0,
+                             0, 0, 1, 0,
+                             0, 0, 0, 1];
         self.matrix_list = [];
 
     def reset_matrix(self):
@@ -28,7 +31,6 @@ class Model_Matrix:
                     new_matrix[count] += self.model_matrix[row * 4 + index] * \
                                          transformation_matrix[column + 4 * index];
                 count += 1;
-
         self.model_matrix = new_matrix;
 
     def add_nothing(self):
@@ -77,6 +79,17 @@ class Model_Matrix:
 
         self.apply_transformation(new_matrix);
 
+    def add_rotation_z(self, angle):
+        c = math.cos(angle);
+        s = math.sin(angle);
+
+        new_matrix = [c, -s,  0,  0,
+                      s,  c,  0,  0,
+                      0,  0,  1,  0,
+                      0,  0,  0,  1];
+
+        self.apply_transformation(new_matrix);
+
     def push_matrix(self):
         self.matrix_list.append(self.copy_matrix());
 
@@ -103,6 +116,30 @@ class View_Matrix:
 
     def slide(self, del_u, del_v, del_n):
         self.eye += self.u * del_u + self.v * del_v + self.n * del_n;
+
+    def roll(self, angle):
+        c = math.cos(angle);
+        s = math.sin(angle);
+
+        tmp_u = self.u * c + self.v * s;
+        self.v = self.u * -s + self.v * c;
+        self.u = tmp_u;
+
+    def pitch(self, angle):
+        c = math.cos(angle);
+        s = math.sin(angle);
+
+        tmp_v = self.v * c + self.n * s;
+        self.n = self.v * -s + self.n * c;
+        self.v = tmp_v;
+
+    def yaw(self, angle):
+        c = math.cos(angle);
+        s = math.sin(angle);
+
+        tmp_n = self.n * c + self.u * s;
+        self.u = self.n * -s + self.u * c;
+        self.n = tmp_n;
 
     def get_matrix(self):
         minus_eye = Vector(-self.eye.xPos, -self.eye.yPos, -self.eye.zPos);
