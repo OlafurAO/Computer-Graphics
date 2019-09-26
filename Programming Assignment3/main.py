@@ -80,7 +80,7 @@ class Game:
         self.projection_matrix.set_perspective(self.field_of_view, screen_size[0] / screen_size[1], 0.5, 100);
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix());
         self.shader.set_view_matrix(self.view_matrix.get_matrix());
-        self.model_matrix.reset_matrix();
+        self.model_matrix.load_identity();
         self.cube.set_cube_vertices(self.shader);
 
         self.draw_level();
@@ -90,17 +90,17 @@ class Game:
     def draw_level(self):
         ############ Wall 1
         color = {'r': 1.0, 'g': 0.0, 'b': 1.0};
-        translation = {'x': 0.0, 'y': 0.0, 'z': 0.0}
+        translation = {'x': 0.0, 'y': 0.0, 'z': -7.0}
         scale = {'x': 15.0, 'y': 3.0, 'z': 1.0};
-        rotation_angle = {'x': 0, 'y': 2.3, 'z': 0};
+        rotation_angle = {'x': 0.0, 'y': 0.0, 'z': 0.0};
 
         self.draw_cube(color, translation, scale, rotation_angle);
         #################################
         ############ Wall 2
         color = {'r': 0.0, 'g': 1.0, 'b': 1.0};
-        translation = {'x': 0.0, 'y': 0.0, 'z': 0.0}
-        scale = {'x': 1.0, 'y': 1.0, 'z': 2.0};
-        rotation_angle = {'x': 0, 'y': 5, 'z': 0};
+        translation = {'x': 8.0, 'y': 0.0, 'z': 0.0}
+        scale = {'x': 15.0, 'y': 3.0, 'z': 1.0};
+        rotation_angle = {'x': 0.0, 'y': 4.75, 'z': 0.0};
 
         self.draw_cube(color, translation, scale, rotation_angle);
         #################################
@@ -109,7 +109,7 @@ class Game:
         color = {'r': 0.0, 'g': 1.0, 'b': 0.0};
         translation = {'x': 0.0, 'y': 0.0, 'z': 0.0}
         scale = {'x': 1.0, 'y': 1.0, 'z': 2.0};
-        rotation_angle = 4.4;
+        rotation_angle = {'x': 0.0, 'y': 4.4, 'z': 0.0};
 
         self.draw_cube(color, translation, scale, rotation_angle);
         #################################
@@ -119,12 +119,13 @@ class Game:
         self.shader.set_solid_color(color['r'], color['g'], color['b']);
         self.model_matrix.push_matrix();
 
-        self.model_matrix.add_scaling(scale['x'], scale['y'], scale['z']);
-        self.model_matrix.add_translation(trans['x'], trans['y'], trans['z'])
+        self.model_matrix.add_translation(trans['x'], trans['y'], trans['z']);
 
-        self.model_matrix.add_rotation_x(rotation['x'])
+        self.model_matrix.add_rotation_x(rotation['x']);
         self.model_matrix.add_rotation_y(rotation['y']);
         self.model_matrix.add_rotation_z(rotation['z']);
+
+        self.model_matrix.add_scaling(scale['x'], scale['y'], scale['z']);
 
         self.shader.set_model_matrix(self.model_matrix.get_model_matrix());
         self.cube.draw_cube();
@@ -176,6 +177,9 @@ class Game:
                 elif(event.key == pygame.K_d):
                     self.d_key_pressed = True;
 
+                if(event.key == pygame.K_LSHIFT):
+                    self.player_speed = 10;
+
             elif(event.type == pygame.KEYUP):
                 if(event.key == pygame.K_w):
                     self.w_key_pressed = False;
@@ -186,6 +190,9 @@ class Game:
                     self.a_key_pressed = False;
                 elif(event.key == pygame.K_d):
                     self.d_key_pressed = False;
+
+                if (event.key == pygame.K_LSHIFT):
+                    self.player_speed = 5;
 
     def init_game(self):
         pygame.init();

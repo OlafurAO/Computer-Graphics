@@ -36,6 +36,7 @@ class Shader3D:
         glLinkProgram(self.renderer);
 
     def init_vec_locations(self):
+        '''
         self.position_vec_location      = glGetAttribLocation(self.renderer, 'vec_position');
         self.normal_vector_location     = glGetAttribLocation(self.renderer, 'vec_normal');
         glEnableVertexAttribArray(self.position_vec_location);
@@ -46,6 +47,19 @@ class Shader3D:
         self.viex_matrix_location       = glGetUniformLocation(self.renderer, 'vec_view_matrix');
 
         self.color_location = glGetUniformLocation(self.renderer, 'u_color');
+        '''
+
+        self.position_vec_location = glGetAttribLocation(self.renderer, 'a_position');
+        self.normal_vector_location = glGetAttribLocation(self.renderer, 'a_normal');
+        glEnableVertexAttribArray(self.position_vec_location);
+        glEnableVertexAttribArray(self.normal_vector_location);
+
+        self.projection_matrix_location = glGetUniformLocation(self.renderer, 'u_projection_matrix');
+        self.model_matrix_location = glGetUniformLocation(self.renderer, 'u_model_matrix');
+        self.viex_matrix_location = glGetUniformLocation(self.renderer, 'u_view_matrix');
+
+        self.color_location = glGetUniformLocation(self.renderer, 'u_color');
+
 
     def render(self):
         glUseProgram(self.renderer);

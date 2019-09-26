@@ -7,9 +7,9 @@ class Model_Matrix:
                              0, 1, 0, 0,
                              0, 0, 1, 0,
                              0, 0, 0, 1];
-        self.matrix_list = [];
+        self.model_matrix_list = [];
 
-    def reset_matrix(self):
+    def load_identity(self):
         self.model_matrix = [1, 0, 0, 0,
                              0, 1, 0, 0,
                              0, 0, 1, 0,
@@ -17,43 +17,34 @@ class Model_Matrix:
 
     def copy_matrix(self):
         new_matrix = [0] * 16;
-        for cell in range(16):
-            new_matrix[cell] = self.model_matrix[cell];
+        for i in range(16):
+            new_matrix[i] = self.model_matrix[i];
         return new_matrix;
 
     def apply_transformation(self, transformation_matrix):
         count = 0;
         new_matrix = [0] * 16;
-
         for row in range(4):
-            for column in range(4):
+            for col in range(4):
                 for index in range(4):
-                    new_matrix[count] += self.model_matrix[row * 4 + index] * \
-                                         transformation_matrix[column + 4 * index];
+                    new_matrix[count] += self.model_matrix[row * 4 + index] * transformation_matrix[col + 4 * index];
                 count += 1;
+
         self.model_matrix = new_matrix;
 
     def add_nothing(self):
-        new_matrix = [1,  0,  0,  0,
-                      0,  1,  0,  0,
-                      0,  0,  1,  0,
-                      0,  0,  0,  1];
+        new_matrix = [1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1];
 
         self.apply_transformation(new_matrix);
 
     def add_translation(self, x, y, z):
-        new_matrix = [1,  0,  0,  x,
-                      0,  1,  0,  y,
-                      0,  0,  1,  z,
-                      0,  0,  0,  1];
-
-        self.apply_transformation(new_matrix);
-
-    def add_scaling(self, x, y, z):
-        new_matrix = [x,  0,  0,  0,
-                      0,  y,  0,  0,
-                      0,  0,  z,  0,
-                      0,  0,  0,  1];
+        new_matrix = [1, 0, 0, x,
+                        0, 1, 0, y,
+                        0, 0, 1, z,
+                        0, 0, 0, 1];
 
         self.apply_transformation(new_matrix);
 
@@ -61,10 +52,10 @@ class Model_Matrix:
         c = math.cos(angle);
         s = math.sin(angle);
 
-        new_matrix = [1,  0,  0,  0,
-                      0,  c, -s,  0,
-                      0,  s,  c,  0,
-                      0,  0,  0,  1];
+        new_matrix = [1, 0,  0, 0,
+                        0, c, -s, 0,
+                        0, s,  c, 0,
+                        0, 0,  0, 1];
 
         self.apply_transformation(new_matrix);
 
@@ -72,10 +63,10 @@ class Model_Matrix:
         c = math.cos(angle);
         s = math.sin(angle);
 
-        new_matrix = [c,  0,  s,  0,
-                      0,  1,  0,  0,
-                     -s,  0,  c,  0,
-                      0,  0,  0,  1];
+        new_matrix = [c, 0, s, 0,
+                        0, 1, 0, 0,
+                       -s, 0, c, 0,
+                        0, 0, 0, 1];
 
         self.apply_transformation(new_matrix);
 
@@ -83,18 +74,26 @@ class Model_Matrix:
         c = math.cos(angle);
         s = math.sin(angle);
 
-        new_matrix = [c, -s,  0,  0,
-                      s,  c,  0,  0,
-                      0,  0,  1,  0,
-                      0,  0,  0,  1];
+        new_matrix = [c, -s, 0, 0,
+                        s,  c, 0, 0,
+                        0,  0, 1, 0,
+                        0,  0, 0, 1];
+
+        self.apply_transformation(new_matrix);
+
+    def add_scaling(self, x, y, z):
+        new_matrix = [x, 0, 0, 0,
+                        0, y, 0, 0,
+                        0, 0, z, 0,
+                        0, 0, 0, 1];
 
         self.apply_transformation(new_matrix);
 
     def push_matrix(self):
-        self.matrix_list.append(self.copy_matrix());
+        self.model_matrix_list.append(self.copy_matrix());
 
     def pop_matrix(self):
-        self.matrix = self.matrix_list.pop();
+        self.model_matrix = self.model_matrix_list.pop();
 
     def get_model_matrix(self):
         return self.model_matrix;
