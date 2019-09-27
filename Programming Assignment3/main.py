@@ -38,7 +38,9 @@ class Game:
 
         self.mouse_sensitivity = 5;
         self.player_speed = 5;
+        self.jump_speed = 10;
         self.angle = 0;
+        self.jump_counter = 0;
 
         self.game_over = False;
 
@@ -46,6 +48,14 @@ class Game:
         self.delta_time = self.clock.tick() / 1000;
         self.angle += math.pi * self.delta_time;
         self.mouse_pos = list(pygame.mouse.get_pos());
+
+        ############### Player jump
+        if(30 < self.jump_counter <= 60):
+            self.view_matrix.slide(0, self.jump_speed * self.delta_time, 0);
+        elif(0 < self.jump_counter < 30):
+            self.view_matrix.slide(0, -self.jump_speed * self.delta_time, 0);
+        if(self.jump_counter > 0):
+            self.jump_counter -= 1;
 
         ############### Keyboard controls
         if(self.w_key_pressed):
@@ -73,8 +83,6 @@ class Game:
         elif(self.mouse_pos[1] > screen_size[1] - 100):
             pygame.mouse.set_pos(self.mouse_pos[0], screen_size[1] / 2);
             self.mouse_pos[1] = screen_size[1] / 2;
-
-        #print(self.view_matrix.eye.xPos, self.view_matrix.eye.yPos, self.view_matrix.eye.zPos);
 
     def display(self):
         glEnable(GL_DEPTH_TEST);
@@ -108,7 +116,7 @@ class Game:
 
         self.draw_cube(object_3D['color'], object_3D['translation'], object_3D['scale'], object_3D['rotation']);
 
-        object_3D = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 5.0, 'y': 0.0, 'z': -5.0},
+        object_3D = {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 5.0, 'y': 0.0, 'z': -5.0},
                      'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': self.angle, 'y': self.angle, 'z': 0.0}};
 
         self.draw_cube(object_3D['color'], object_3D['translation'], object_3D['scale'], object_3D['rotation']);
@@ -177,6 +185,10 @@ class Game:
                 elif(event.key == pygame.K_d):
                     self.d_key_pressed = True;
 
+                if(event.key == pygame.K_SPACE):
+                    if(self.jump_counter == 0):
+                        self.jump_counter = 60;
+
                 if(event.key == pygame.K_LSHIFT):
                     self.player_speed = 10;
 
@@ -242,28 +254,28 @@ class Game:
              'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 1.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': -7.0},
-             'scale': {'x': 41.0, 'y': 3.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+             'scale': {'x': 41.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 8.0, 'y': 0.0, 'z': 0.0},
-             'scale': {'x': 15.0, 'y': 3.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
+             'scale': {'x': 15.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 3.8, 'y': 0.0, 'z': 8.0},
-             'scale': {'x': 10.0, 'y': 3.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+             'scale': {'x': 10.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -10.0, 'y': 0.0, 'z': 12.0},
-             'scale': {'x': 40.0, 'y': 3.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
+             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -1.0, 'y': 0.0, 'z': 15.0},
-             'scale': {'x': 15.0, 'y': 3.0, 'z': 2.5}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
+             'scale': {'x': 15.0, 'y': 5.0, 'z': 2.5}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 0.0, 'y': 0.0, 'z': 31.0},
-             'scale': {'x': 20.0, 'y': 3.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+             'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': 25.0},
-             'scale': {'x': 20.0, 'y': 3.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
+             'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 25.0},
-             'scale': {'x': 80.0, 'y': 3.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.7, 'z': 0.0}},
+             'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.7, 'z': 0.0}},
         ];
 
 def main():
