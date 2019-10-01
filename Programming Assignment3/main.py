@@ -7,8 +7,6 @@ from Matrix.matrix import *;
 
 screen_size = (1200, 800);
 
-# TODO: Gamepad support
-
 class Game:
     def __init__(self):
         self.init_game();
@@ -35,52 +33,93 @@ class Game:
         self.delta_time = self.clock.tick() / 1000;
 
         self.cube = Cube();
+        self.init_gamepad();
 
         self.mouse_sensitivity = 5;
+        self.angle = 0;
+
         self.player_speed = 5;
         self.jump_speed = 10;
-        self.angle = 0;
+        self.sprint_strafe_counter = 0;
+        self.sprint_strafe_speed = 5;
         self.jump_counter = 0;
 
         self.game_over = False;
+        self.player_sprinting = False;
 
     def update(self):
         self.delta_time = self.clock.tick() / 1000;
         self.angle += math.pi * self.delta_time;
         self.mouse_pos = list(pygame.mouse.get_pos());
 
+        ############### Player sprint strafe
+        self.update_sprint();
         ############### Player jump
-        if(30 < self.jump_counter <= 60):
+        self.update_jump();
+        ############### Keyboard controls
+        self.update_movement();
+        ############### Reset mouse position
+        self.update_mouse();
+
+    def update_sprint(self):
+        if (50 < self.sprint_strafe_counter <= 100):
+            self.view_matrix.slide(self.sprint_strafe_speed * self.delta_time, 0, 0);
+
+            if (self.sprint_strafe_counter >= 75):
+                self.view_matrix.slide(0, self.sprint_strafe_speed * self.delta_time, 0);
+            else:
+                self.view_matrix.slide(0, -self.sprint_strafe_speed * self.delta_time, 0);
+
+        elif (0 < self.sprint_strafe_counter < 50):
+            self.view_matrix.slide(-self.sprint_strafe_speed * self.delta_time, 0, 0);
+
+            if (self.sprint_strafe_counter >= 26):
+                self.view_matrix.slide(0, self.sprint_strafe_speed * self.delta_time, 0);
+            else:
+                self.view_matrix.slide(0, -self.sprint_strafe_speed * self.delta_time, 0);
+
+        if (self.sprint_strafe_counter > 0):
+            self.sprint_strafe_counter -= 1;
+        elif (self.sprint_strafe_counter == 0 and self.player_sprinting):
+            self.sprint_strafe_counter = 100;
+
+        if(self.view_matrix.eye.yPos > 0.5 and self.jump_counter == 0):
+            self.view_matrix.eye.yPos = 0;
+
+    def update_jump(self):
+        if (30 < self.jump_counter <= 60):
             self.view_matrix.slide(0, self.jump_speed * self.delta_time, 0);
-        elif(0 < self.jump_counter < 30):
+        elif (0 < self.jump_counter < 30):
             self.view_matrix.slide(0, -self.jump_speed * self.delta_time, 0);
-        if(self.jump_counter > 0):
+
+        if (self.jump_counter > 0):
             self.jump_counter -= 1;
 
-        ############### Keyboard controls
-        if(self.w_key_pressed):
-            if not(self.check_collision('FORWARD')):
+    def update_movement(self):
+        if (self.w_key_pressed):
+            if not (self.check_collision('FORWARD')):
                 self.view_matrix.slide(0, 0, -self.player_speed * self.delta_time);
-        elif(self.s_key_pressed):
+
+        elif (self.s_key_pressed):
             self.view_matrix.slide(0, 0, self.player_speed * self.delta_time);
 
-        if(self.a_key_pressed):
+        if (self.a_key_pressed):
             self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
-        elif(self.d_key_pressed):
+        elif (self.d_key_pressed):
             self.view_matrix.slide(-self.player_speed * self.delta_time, 0, 0);
 
-        ############### Reset mouse position
-        if(self.mouse_pos[0] < 100):
+    def update_mouse(self):
+        if (self.mouse_pos[0] < 100):
             pygame.mouse.set_pos(screen_size[0] / 2, self.mouse_pos[1]);
             self.mouse_pos[0] = screen_size[0] / 2;
-        elif(self.mouse_pos[0] > screen_size[0] - 100):
+        elif (self.mouse_pos[0] > screen_size[0] - 100):
             pygame.mouse.set_pos(screen_size[0] / 2, self.mouse_pos[1]);
             self.mouse_pos[0] = screen_size[0] / 2;
 
-        if(self.mouse_pos[1] < 100):
+        if (self.mouse_pos[1] < 100):
             pygame.mouse.set_pos(self.mouse_pos[0], screen_size[1] / 2);
             self.mouse_pos[1] = screen_size[1] / 2;
-        elif(self.mouse_pos[1] > screen_size[1] - 100):
+        elif (self.mouse_pos[1] > screen_size[1] - 100):
             pygame.mouse.set_pos(self.mouse_pos[0], screen_size[1] / 2);
             self.mouse_pos[1] = screen_size[1] / 2;
 
@@ -110,16 +149,19 @@ class Game:
              'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': self.angle}};
 
         self.draw_cube(object_3D['color'], object_3D['translation'], object_3D['scale'], object_3D['rotation']);
+        self.object_list.append(object_3D);
 
         object_3D = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 5.0, 'y': 0.0, 'z': 0.0},
                      'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': self.angle, 'z': 0.0}};
 
         self.draw_cube(object_3D['color'], object_3D['translation'], object_3D['scale'], object_3D['rotation']);
+        self.object_list.append(object_3D);
 
         object_3D = {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 5.0, 'y': 0.0, 'z': -5.0},
                      'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': self.angle, 'y': self.angle, 'z': 0.0}};
 
         self.draw_cube(object_3D['color'], object_3D['translation'], object_3D['scale'], object_3D['rotation']);
+        self.object_list.append(object_3D);
 
     def draw_cube(self, color, trans, scale, rotation):
         self.shader.set_solid_color(color['r'], color['g'], color['b']);
@@ -145,66 +187,109 @@ class Game:
 
     def input_handler(self):
         for event in pygame.event.get():
-            if(event.type == pygame.QUIT):
+            self.keyboard_controls(event);
+            if(len(self.gamepad_list) > 0):
+                pass
+                #self.gamepad_controls(event);
+
+    def keyboard_controls(self, event):
+        if(event.type == pygame.QUIT):
+            self.game_over = True;
+
+        if(event.type == pygame.MOUSEMOTION):
+            new_mouse_pos = pygame.mouse.get_pos();
+
+            if(new_mouse_pos[0] > self.mouse_pos[0]):
+                mouse_x_pos_movement = new_mouse_pos[0] - self.mouse_pos[0];
+                self.view_matrix.yaw(self.delta_time * mouse_x_pos_movement);
+                self.mouse_pos = list(new_mouse_pos);
+            elif(new_mouse_pos[0] < self.mouse_pos[0]):
+                mouse_x_pos_movement = self.mouse_pos[0] - new_mouse_pos[0];
+                self.view_matrix.yaw(-self.delta_time * mouse_x_pos_movement);
+                self.mouse_pos = list(new_mouse_pos);
+
+            '''
+            if(new_mouse_pos[1] > self.mouse_pos[1]):
+                mouse_y_pos_movement = self.mouse_pos[1] - new_mouse_pos[1];
+                self.view_matrix.pitch(self.delta_time * mouse_y_pos_movement);
+                self.mouse_pos = list(new_mouse_pos);
+            elif(new_mouse_pos[1] < self.mouse_pos[1]):
+                mouse_y_pos_movement = new_mouse_pos[1] - self.mouse_pos[1];
+                self.view_matrix.pitch(-self.delta_time * mouse_y_pos_movement);
+                self.mouse_pos = list(new_mouse_pos);
+            '''
+
+        if(event.type == pygame.KEYDOWN):
+            if(event.key == pygame.K_q):
                 self.game_over = True;
 
-            if(event.type == pygame.MOUSEMOTION):
-                new_mouse_pos = pygame.mouse.get_pos();
+            if(event.key == pygame.K_w):
+                self.w_key_pressed = True;
+            elif(event.key == pygame.K_s):
+                self.s_key_pressed = True;
 
-                if(new_mouse_pos[0] > self.mouse_pos[0]):
-                    mouse_x_pos_movement = new_mouse_pos[0] - self.mouse_pos[0];
-                    self.view_matrix.yaw(self.delta_time * mouse_x_pos_movement);
-                    self.mouse_pos = list(new_mouse_pos);
-                elif(new_mouse_pos[0] < self.mouse_pos[0]):
-                    mouse_x_pos_movement = self.mouse_pos[0] - new_mouse_pos[0];
-                    self.view_matrix.yaw(-self.delta_time * mouse_x_pos_movement);
-                    self.mouse_pos = list(new_mouse_pos);
+            if(event.key == pygame.K_a):
+                self.a_key_pressed = True;
+            elif(event.key == pygame.K_d):
+                self.d_key_pressed = True;
 
-                '''
-                if(new_mouse_pos[1] > self.mouse_pos[1]):
-                    mouse_y_pos_movement = self.mouse_pos[1] - new_mouse_pos[1];
-                    self.view_matrix.pitch(self.delta_time * mouse_y_pos_movement);
-                    self.mouse_pos = list(new_mouse_pos);
-                elif(new_mouse_pos[1] < self.mouse_pos[1]):
-                    mouse_y_pos_movement = new_mouse_pos[1] - self.mouse_pos[1];
-                    self.view_matrix.pitch(-self.delta_time * mouse_y_pos_movement);
-                    self.mouse_pos = list(new_mouse_pos);
-                '''
+            if(event.key == pygame.K_SPACE):
+                if(self.jump_counter == 0):
+                    self.jump_counter = 60;
 
-            if(event.type == pygame.KEYDOWN):
-                if(event.key == pygame.K_q):
-                    self.game_over = True;
+            if(event.key == pygame.K_LSHIFT):
+                self.sprint_strafe_counter = 100;
+                self.player_speed = 10;
+                self.player_sprinting = True;
 
-                if(event.key == pygame.K_w):
-                    self.w_key_pressed = True;
-                elif(event.key == pygame.K_s):
-                    self.s_key_pressed = True;
+        elif(event.type == pygame.KEYUP):
+            if(event.key == pygame.K_w):
+                self.w_key_pressed = False;
+            elif(event.key == pygame.K_s):
+                self.s_key_pressed = False;
 
-                if(event.key == pygame.K_a):
+            if(event.key == pygame.K_a):
+                self.a_key_pressed = False;
+            elif(event.key == pygame.K_d):
+                self.d_key_pressed = False;
+
+            if (event.key == pygame.K_LSHIFT):
+                self.sprint_strafe_counter = 0;
+                self.player_speed = 5;
+                self.player_sprinting = False;
+
+    def gamepad_controls(self, event):
+        if(event.type == pygame.JOYAXISMOTION):
+            axis = self.gamepad_list[event.joy].get_axis(event.axis);
+
+            if(axis < -1.0):
+                return;
+
+            # Left analog stick
+            if(event.axis == 0):
+                if(-1.0  <= axis <= -0.5):
                     self.a_key_pressed = True;
-                elif(event.key == pygame.K_d):
+                elif(0.5 <= axis <= 1.0):
                     self.d_key_pressed = True;
-
-                if(event.key == pygame.K_SPACE):
-                    if(self.jump_counter == 0):
-                        self.jump_counter = 60;
-
-                if(event.key == pygame.K_LSHIFT):
-                    self.player_speed = 10;
-
-            elif(event.type == pygame.KEYUP):
-                if(event.key == pygame.K_w):
-                    self.w_key_pressed = False;
-                elif(event.key == pygame.K_s):
-                    self.s_key_pressed = False;
-
-                if(event.key == pygame.K_a):
+                else:
                     self.a_key_pressed = False;
-                elif(event.key == pygame.K_d):
                     self.d_key_pressed = False;
 
-                if (event.key == pygame.K_LSHIFT):
-                    self.player_speed = 5;
+            elif(event.axis == 1):
+                if(-1.0 <= axis <= -0.5):
+                    self.w_key_pressed = True;
+                elif(0.5 <= axis <= 1.0):
+                    self.s_key_pressed = True;
+                else:
+                    self.s_key_pressed = False;
+                    self.w_key_pressed = False;
+
+            # Right analog stick
+            elif(event.axis == 2):
+                if(-1.0 <= axis <= -0.4):
+                    self.view_matrix.yaw(-self.delta_time * 5);
+                elif(0.4 <= axis <= 1.0):
+                    self.view_matrix.yaw(self.delta_time * 5);
 
     def check_collision(self, direction):
         eye = self.view_matrix.eye;
@@ -214,7 +299,7 @@ class Game:
 
             distance = (eye.xPos - trans['x'])**2 + (eye.zPos - trans['z'])**2;
             distance = math.sqrt(distance);
-            if(distance < 2):
+            if(distance < 2.5):
                 return True;
             '''
             if(direction == 'FORWARD'):
@@ -249,6 +334,7 @@ class Game:
         self.d_key_pressed = False;
 
     def init_level(self):
+        self.object_list = [];
         self.level_list = [
             {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
              'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
@@ -274,9 +360,29 @@ class Game:
             {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': 25.0},
              'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
 
-            {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 25.0},
+            {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 25.0},
              'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.7, 'z': 0.0}},
+
+            {'color': {'r': 0.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 60.0},
+             'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+
+            {'color': {'r': 0.5, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
+             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.7, 'z': 0.0}}
         ];
+
+    def init_gamepad(self):
+        self.gamepad_list = [];
+
+        for gamepad in range(pygame.joystick.get_count()):
+            self.gamepad_list.append(pygame.joystick.Joystick(gamepad));
+
+        for gamepad in self.gamepad_list:
+            gamepad.init();
+
+
+
+
+
 
 def main():
     game = Game();
