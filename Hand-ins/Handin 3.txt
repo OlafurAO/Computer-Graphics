@@ -1,0 +1,24 @@
+2015 Problem 2:
+    P1: (240, 480)
+    P2: (140, 300)
+
+    delx = 140 - 240 = -100
+    dely = 300 - 480 = -180
+
+          l r t b
+    C1 = [0 0 1 0]
+    C2 = [1 0 0 0]
+
+
+    P1 outside
+	Above:
+	    P1.x = P1.x + (W.t - P1.y) * dely / delx = 240 + (400 - 480) * 1.8 = 96 
+    	    P1.y = W.t = 400 
+
+    End of Pass1: P1 = (96, 400), P2 = (140, 300)
+
+
+    Pass2: C1 = [1 0 0 0] C2 = [1 0 0 0]
+    TRIVIAL REJECT
+
+    The line has no endpoint

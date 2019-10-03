@@ -38,7 +38,7 @@ class Game:
         self.mouse_sensitivity = 5;
         self.angle = 0;
 
-        self.player_speed = 5;
+        self.player_speed = 10;
         self.jump_speed = 10;
         self.sprint_strafe_counter = 0;
         self.sprint_strafe_speed = 5;
@@ -83,8 +83,11 @@ class Game:
         elif (self.sprint_strafe_counter == 0 and self.player_sprinting):
             self.sprint_strafe_counter = 100;
 
-        if(self.view_matrix.eye.yPos > 0.5 and self.jump_counter == 0):
-            self.view_matrix.eye.yPos = 0;
+        if(self.jump_counter == 0):
+            if(self.view_matrix.eye.yPos > 0.5):
+                self.view_matrix.eye.yPos = 0;
+            elif(self.view_matrix.eye.yPos < -0.6):
+                self.view_matrix.eye.yPos = 0;
 
     def update_jump(self):
         if (30 < self.jump_counter <= 60):
@@ -188,8 +191,7 @@ class Game:
     def input_handler(self):
         for event in pygame.event.get():
             self.keyboard_controls(event);
-            if(len(self.gamepad_list) > 0):
-                pass
+            #if(len(self.gamepad_list) > 0):
                 #self.gamepad_controls(event);
 
     def keyboard_controls(self, event):
@@ -239,7 +241,7 @@ class Game:
 
             if(event.key == pygame.K_LSHIFT):
                 self.sprint_strafe_counter = 100;
-                self.player_speed = 10;
+                self.player_speed = 20;
                 self.player_sprinting = True;
 
         elif(event.type == pygame.KEYUP):
@@ -255,7 +257,7 @@ class Game:
 
             if (event.key == pygame.K_LSHIFT):
                 self.sprint_strafe_counter = 0;
-                self.player_speed = 5;
+                self.player_speed = 10;
                 self.player_sprinting = False;
 
     def gamepad_controls(self, event):
@@ -378,11 +380,6 @@ class Game:
 
         for gamepad in self.gamepad_list:
             gamepad.init();
-
-
-
-
-
 
 def main():
     game = Game();
