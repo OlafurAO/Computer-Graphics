@@ -104,12 +104,15 @@ class Game:
                 self.view_matrix.slide(0, 0, -self.player_speed * self.delta_time);
 
         elif (self.s_key_pressed):
-            self.view_matrix.slide(0, 0, self.player_speed * self.delta_time);
+            if not (self.check_collision('BACKWARD')):
+                self.view_matrix.slide(0, 0, self.player_speed * self.delta_time);
 
         if (self.a_key_pressed):
-            self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
+            if not (self.check_collision('LEFT')):
+                self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
         elif (self.d_key_pressed):
-            self.view_matrix.slide(-self.player_speed * self.delta_time, 0, 0);
+            if not (self.check_collision('RIGHT')):
+                self.view_matrix.slide(-self.player_speed * self.delta_time, 0, 0);
 
     def update_mouse(self):
         if (self.mouse_pos[0] < 100):
@@ -146,6 +149,11 @@ class Game:
     def draw_level(self):
         for wall in self.level_list:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
+
+        floor = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
+                 'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}}
+
+        self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
 
         # Rotating 3D objects
         object_3D = {'color': {'r': 0.2, 'g': 0.2, 'b': 0.5}, 'translation': {'x': 5.0, 'y': 0.0, 'z': 5.0},
@@ -298,20 +306,41 @@ class Game:
 
         for wall in self.level_list:
             trans = wall['translation'];
+            scale = wall['scale'];
+            rotation = wall['rotation'];
 
-            distance = (eye.xPos - trans['x'])**2 + (eye.zPos - trans['z'])**2;
-            distance = math.sqrt(distance);
-            if(distance < 2.5):
-                return True;
-            '''
-            if(direction == 'FORWARD'):
-                if(wall['translation']['z'] < self.view_matrix.eye.zPos):
-                    print(str(self.view_matrix.eye.zPos + self.player_speed * self.delta_time), str(wall['translation']['z']))
-                    new_zPos = self.view_matrix.eye.zPos + self.player_speed * self.delta_time;
-                    if(new_zPos <= wall['translation']['z'] + wall['scale']['z']):
-                        if(wall['translation']['x'] <= self.view_matrix.eye.xPos <= wall['translation']['x'] + wall['scale']['x']):
-                            return True;
-            '''
+            if(rotation['y'] == 0.0):
+                if(direction == 'FORWARD' or direction == 'BACKWARD'):
+                    if(trans['x'] - scale['x'] / 2 <= eye.xPos <= trans['x'] + scale['x'] / 2):
+                        if(trans['z'] < eye.zPos):
+                            if(trans['z'] - scale['z'] / 2 <= eye.zPos - 2 - self.player_speed * self.delta_time <= trans['z'] + scale['z'] / 2):
+                                return True;
+                        elif(trans['z'] > eye.zPos):
+                            if(trans['z'] - scale['z'] / 2 <= eye.zPos + 2 + self.player_speed * self.delta_time <= trans['z'] + scale['z'] / 2):
+                                return True;
+
+                elif(direction == 'LEFT' or direction == 'RIGHT'):
+                    if(trans['z'] - scale['z'] / 2 <= eye.zPos  <= trans['z'] + scale['z'] / 2):
+                        if(trans['x'] < eye.xPos):
+                            if(trans['x'] - scale['x'] / 2 <= eye.xPos - 4 <= trans['x'] + scale['x'] / 2):
+                                return True;
+                        elif(trans['x'] > eye.xPos):
+                            if(trans['x'] - scale['x'] / 2 <= eye.xPos + 4 <= trans['x'] + scale['x'] / 2):
+                                return True;
+            else:
+                if(direction == 'FORWARD' or direction == 'BACKWARD'):
+                    if(trans['z'] - scale['x'] / 2 <= eye.zPos <= trans['z'] + scale['x'] / 2):
+                        if(scale['x'] > scale['z']):
+                            if(trans['x'] < eye.xPos):
+                                if(trans['x'] - scale['z'] / 2 <= eye.xPos - 2 <= trans['x'] + scale['z'] / 2):
+                                    return True;
+                            elif(trans['x'] > eye.xPos):
+                                if (trans['x'] - scale['z'] / 2 <= eye.xPos + 2 <= trans['x'] + scale['z'] / 2):
+                                    return True;
+
+                elif (direction == 'LEFT' or direction == 'RIGHT'):
+                    pass
+
 
     def init_game(self):
         pygame.init();
@@ -337,40 +366,47 @@ class Game:
 
     def init_level(self):
         self.object_list = [];
+        '''
         self.level_list = [
-            {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
-             'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+            {'color': {'r': 1.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': -7.0},
+             'scale': {'x': 41.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
+            {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -10.0, 'y': 0.0, 'z': 12.0},
+             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}}
+        '''
+
+        self.level_list = [
             {'color': {'r': 1.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': -7.0},
              'scale': {'x': 41.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 8.0, 'y': 0.0, 'z': 0.0},
-             'scale': {'x': 15.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
+             'scale': {'x': 15.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 3.8, 'y': 0.0, 'z': 8.0},
              'scale': {'x': 10.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -10.0, 'y': 0.0, 'z': 12.0},
-             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
+             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -1.0, 'y': 0.0, 'z': 15.0},
-             'scale': {'x': 15.0, 'y': 5.0, 'z': 2.5}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
+             'scale': {'x': 15.0, 'y': 5.0, 'z': 2.5}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 0.0, 'y': 0.0, 'z': 31.0},
              'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': 25.0},
-             'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.75, 'z': 0.0}},
+             'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 25.0},
-             'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.7, 'z': 0.0}},
+             'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 60.0},
              'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
-             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.7, 'z': 0.0}}
+             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}}
         ];
+
 
     def init_gamepad(self):
         self.gamepad_list = [];
