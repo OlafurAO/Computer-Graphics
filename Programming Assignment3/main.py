@@ -313,11 +313,13 @@ class Game:
                 if(direction == 'FORWARD' or direction == 'BACKWARD'):
                     if(trans['x'] - scale['x'] / 2 <= eye.xPos <= trans['x'] + scale['x'] / 2):
                         if(trans['z'] < eye.zPos):
-                            if(trans['z'] - scale['z'] / 2 <= eye.zPos - 2 - self.player_speed * self.delta_time <= trans['z'] + scale['z'] / 2):
+                            if(trans['z'] - scale['z'] / 2 <= eye.zPos - 2 <= trans['z'] + scale['z'] / 2):
                                 return True;
                         elif(trans['z'] > eye.zPos):
-                            if(trans['z'] - scale['z'] / 2 <= eye.zPos + 2 + self.player_speed * self.delta_time <= trans['z'] + scale['z'] / 2):
+                            if(trans['z'] - scale['z'] / 2 <= eye.zPos + 2 <= trans['z'] + scale['z'] / 2):
                                 return True;
+                        else:
+                            return False;
 
                 elif(direction == 'LEFT' or direction == 'RIGHT'):
                     if(trans['z'] - scale['z'] / 2 <= eye.zPos  <= trans['z'] + scale['z'] / 2):
@@ -406,7 +408,6 @@ class Game:
             {'color': {'r': 0.5, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
              'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}}
         ];
-
 
     def init_gamepad(self):
         self.gamepad_list = [];

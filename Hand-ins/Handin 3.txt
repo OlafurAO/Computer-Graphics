@@ -12,10 +12,10 @@
 
     P1 outside
 	Above:
-	    P1.x = P1.x + (W.t - P1.y) * dely / delx = 240 + (400 - 480) * 1.8 = 96 
+	    P1.x = P1.x + (W.t - P1.y) * delx / dely = 240 + (400 - 480) * 1/1.8 = 195,5 
     	    P1.y = W.t = 400 
 
-    End of Pass1: P1 = (96, 400), P2 = (140, 300)
+    End of Pass1: P1 = (195.5, 400), P2 = (140, 300)
 
 
     Pass2: C1 = [1 0 0 0] C2 = [1 0 0 0]
