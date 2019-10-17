@@ -117,8 +117,19 @@ class Game:
         glViewport(0, 0, screen_size[0], screen_size[1]);
 
         self.projection_matrix.set_perspective(self.field_of_view, screen_size[0] / screen_size[1], 0.5, 100);
+
         self.shader.set_projection_matrix(self.projection_matrix.get_matrix());
         self.shader.set_view_matrix(self.view_matrix.get_matrix());
+
+        self.shader.set_eye_position(self.view_matrix.eye);
+
+        self.shader.set_light_position(Point(0.0, 10.0, 0.0));
+        self.shader.set_light_diffuse(1.0, 1.0, 1.0);
+        self.shader.set_light_specular(1.0, 1.0, 1.0);
+
+        self.shader.set_material_specular(1.0, 1.0, 1.0);
+        self.shader.set_material_shininess(25);
+
         self.model_matrix.load_identity();
         self.cube.set_cube_vertices(self.shader);
 
@@ -127,6 +138,12 @@ class Game:
         pygame.display.flip();
 
     def draw_level(self):
+        self.level_list.pop();
+
+        object_3D = {'color': {'r': 0.2, 'g': 0.2, 'b': 0.5}, 'translation': {'x': 1.0, 'y': 0.0, 'z': 2.0},
+                     'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': self.angle}};
+        self.level_list.append(object_3D);
+
         for wall in self.level_list:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
 
@@ -135,27 +152,8 @@ class Game:
 
         self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
 
-        '''
-        sphere = Sphere();
-
-        self.shader.set_solid_color(1.0, 0.0, 1.0);
-        self.model_matrix.push_matrix();
-
-        self.model_matrix.add_translation(0.0, 0.0, 0.0);
-
-        self.model_matrix.add_rotation_x(0.0);
-        self.model_matrix.add_rotation_y(0.0);
-        self.model_matrix.add_rotation_z(0.0);
-
-        self.model_matrix.add_scaling(10.0, 10.0, 10.0);
-
-        self.shader.set_model_matrix(self.model_matrix.get_model_matrix());
-        sphere.draw_sphere(self.shader);
-        self.model_matrix.pop_matrix();
-        '''
-
     def draw_cube(self, color, trans, scale, rotation):
-        self.shader.set_solid_color(color['r'], color['g'], color['b']);
+        self.shader.set_material_diffuse(color['r'], color['g'], color['b']);
         self.model_matrix.push_matrix();
 
         self.model_matrix.add_translation(trans['x'], trans['y'], trans['z']);
@@ -347,4 +345,3 @@ def main():
 
 if __name__ == '__main__':
     main();
-

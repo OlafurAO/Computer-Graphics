@@ -8,7 +8,6 @@ class Shader3D:
         self.init_shader();
         self.init_vec_locations();
 
-
     def init_shader(self):
         vertex_shader = glCreateShader(GL_VERTEX_SHADER);
         vertex_shader_file = open(sys.path[0] + '/Shaders/3Dshader.vert');
@@ -36,19 +35,6 @@ class Shader3D:
         glLinkProgram(self.renderer);
 
     def init_vec_locations(self):
-        '''
-        self.position_vec_location      = glGetAttribLocation(self.renderer, 'vec_position');
-        self.normal_vector_location     = glGetAttribLocation(self.renderer, 'vec_normal');
-        glEnableVertexAttribArray(self.position_vec_location);
-        glEnableVertexAttribArray(self.normal_vector_location);
-
-        self.projection_matrix_location = glGetUniformLocation(self.renderer, 'vec_projection_matrix');
-        self.model_matrix_location      = glGetUniformLocation(self.renderer, 'vec_model_matrix');
-        self.viex_matrix_location       = glGetUniformLocation(self.renderer, 'vec_view_matrix');
-
-        self.color_location = glGetUniformLocation(self.renderer, 'u_color');
-        '''
-
         self.position_vec_location = glGetAttribLocation(self.renderer, 'a_position');
         self.normal_vector_location = glGetAttribLocation(self.renderer, 'a_normal');
         glEnableVertexAttribArray(self.position_vec_location);
@@ -58,8 +44,15 @@ class Shader3D:
         self.model_matrix_location = glGetUniformLocation(self.renderer, 'u_model_matrix');
         self.viex_matrix_location = glGetUniformLocation(self.renderer, 'u_view_matrix');
 
-        self.color_location = glGetUniformLocation(self.renderer, 'u_color');
+        self.eye_pos_location = glGetUniformLocation(self.renderer, 'u_eye_position')
 
+        self.light_pos_location = glGetUniformLocation(self.renderer, 'u_light_position');
+        self.light_diffuse_location = glGetUniformLocation(self.renderer, 'u_light_diffuse');
+        self.light_specular_location = glGetUniformLocation(self.renderer, 'u_light_specular');
+
+        self.material_diffuse_location = glGetUniformLocation(self.renderer, 'u_material_diffuse');
+        self.material_specular_location = glGetUniformLocation(self.renderer, 'u_material_specular');
+        self.material_shininess_location = glGetUniformLocation(self.renderer, 'u_material_shininess');
 
     def render(self):
         glUseProgram(self.renderer);
@@ -73,8 +66,26 @@ class Shader3D:
     def set_projection_matrix(self, matrix):
         glUniformMatrix4fv(self.projection_matrix_location, 1, True, matrix);
 
-    def set_solid_color(self, r, g, b):
-        glUniform4f(self.color_location, r, g, b, 0.0);
+    def set_eye_position(self, pos):
+        glUniform4f(self.eye_pos_location, pos.xPos, pos.yPos, pos.zPos, 1.0);
+
+    def set_light_position(self, pos):
+        glUniform4f(self.light_pos_location, pos.xPos, pos.yPos, pos.zPos, 1.0);
+
+    def set_light_diffuse(self, r, g, b):
+        glUniform4f(self.light_diffuse_location, r, g, b, 1.0);
+
+    def set_light_specular(self, r, g, b):
+        glUniform4f(self.light_specular_location, r, g, b, 1.0);
+
+    def set_material_diffuse(self, r, g, b):
+        glUniform4f(self.material_diffuse_location, r, g, b, 1.0);
+
+    def set_material_specular(self, r, g, b):
+        glUniform4f(self.material_specular_location, r, g, b, 1.0);
+
+    def set_material_shininess(self, shininess):
+        glUniform1f(self.material_shininess_location, shininess);
 
     def set_position_attribute(self, vertex_array):
         glVertexAttribPointer(self.position_vec_location, 3, GL_FLOAT, False, 0, vertex_array);
