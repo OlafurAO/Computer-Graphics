@@ -7,7 +7,7 @@ from Matrix.matrix import *;
 
 screen_size = (1200, 800);
 
-
+# NOTE: this game utilizes mouse controls and works best with an actual mouse, rather than a touchpad
 class Game:
     def __init__(self):
         self.init_game();
@@ -48,13 +48,21 @@ class Game:
         self.game_over = False;
         self.player_sprinting = False;
 
+        self.player_direction = 0;
+        self.player_collision_direction = None;
+
     def update(self):
         self.delta_time = self.clock.tick() / 1000;
         self.angle += math.pi * self.delta_time;
         self.mouse_pos = list(pygame.mouse.get_pos());
 
+        '''
+        The sprint "strafe" effect has been removed due to complaints from
+        people I showed it to. You can uncomment it and check it out if you want 
+        '''
         ############### Player sprint strafe
-        self.update_sprint();
+        #self.update_sprint();
+
         ############### Player jump
         self.update_jump();
         ############### Keyboard controls
@@ -64,20 +72,20 @@ class Game:
 
     def update_sprint(self):
         if (50 < self.sprint_strafe_counter <= 100):
-            self.view_matrix.slide(self.sprint_strafe_speed * self.delta_time, 0, 0);
+            self.view_matrix.slide(self.delta_time, 0, 0);
 
             if (self.sprint_strafe_counter >= 75):
-                self.view_matrix.slide(0, self.sprint_strafe_speed * self.delta_time, 0);
+                self.view_matrix.slide(0, self.delta_time, 0);
             else:
-                self.view_matrix.slide(0, -self.sprint_strafe_speed * self.delta_time, 0);
+                self.view_matrix.slide(0, self.delta_time, 0);
 
         elif (0 < self.sprint_strafe_counter < 50):
-            self.view_matrix.slide(-self.sprint_strafe_speed * self.delta_time, 0, 0);
+            self.view_matrix.slide(-self.delta_time, 0, 0);
 
             if (self.sprint_strafe_counter >= 26):
-                self.view_matrix.slide(0, self.sprint_strafe_speed * self.delta_time, 0);
+                self.view_matrix.slide(0, self.delta_time, 0);
             else:
-                self.view_matrix.slide(0, -self.sprint_strafe_speed * self.delta_time, 0);
+                self.view_matrix.slide(0, -self.delta_time, 0);
 
         if (self.sprint_strafe_counter > 0):
             self.sprint_strafe_counter -= 1;
@@ -103,17 +111,26 @@ class Game:
         if (self.w_key_pressed):
             if not (self.check_collision('FORWARD')):
                 self.view_matrix.slide(0, 0, -self.player_speed * self.delta_time);
+            else:
+                self.view_matrix.slide(0, 0, (self.player_speed + 1) * self.delta_time);
 
         elif (self.s_key_pressed):
             if not (self.check_collision('BACKWARD')):
                 self.view_matrix.slide(0, 0, self.player_speed * self.delta_time);
+            else:
+                self.view_matrix.slide(0, 0, (-self.player_speed + 1) * self.delta_time);
 
         if (self.a_key_pressed):
             if not (self.check_collision('LEFT')):
                 self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
+            else:
+                self.view_matrix.slide(-self.player_speed * self.delta_time, 0, 0);
+
         elif (self.d_key_pressed):
             if not (self.check_collision('RIGHT')):
                 self.view_matrix.slide(-self.player_speed * self.delta_time, 0, 0);
+            else:
+                self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
 
     def update_mouse(self):
         if (self.mouse_pos[0] < 100):
@@ -148,32 +165,19 @@ class Game:
         pygame.display.flip();
 
     def draw_level(self):
+        self.level_list.pop();
+
+        object_3D = {'color': {'r': 0.2, 'g': 0.2, 'b': 0.5}, 'translation': {'x': 1.0, 'y': 0.0, 'z': 2.0},
+                     'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': self.angle}};
+        self.level_list.append(object_3D);
+
         for wall in self.level_list:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
 
         floor = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
-                 'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}}
+                 'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
 
         self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
-
-        # Rotating 3D objects
-        object_3D = {'color': {'r': 0.2, 'g': 0.2, 'b': 0.5}, 'translation': {'x': 5.0, 'y': 0.0, 'z': 5.0},
-             'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': self.angle}};
-
-        self.draw_cube(object_3D['color'], object_3D['translation'], object_3D['scale'], object_3D['rotation']);
-        self.object_list.append(object_3D);
-
-        object_3D = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 5.0, 'y': 0.0, 'z': 0.0},
-                     'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': self.angle, 'z': 0.0}};
-
-        self.draw_cube(object_3D['color'], object_3D['translation'], object_3D['scale'], object_3D['rotation']);
-        self.object_list.append(object_3D);
-
-        object_3D = {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 5.0, 'y': 0.0, 'z': -5.0},
-                     'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': self.angle, 'y': self.angle, 'z': 0.0}};
-
-        self.draw_cube(object_3D['color'], object_3D['translation'], object_3D['scale'], object_3D['rotation']);
-        self.object_list.append(object_3D);
 
     def draw_cube(self, color, trans, scale, rotation):
         self.shader.set_solid_color(color['r'], color['g'], color['b']);
@@ -214,6 +218,7 @@ class Game:
                 mouse_x_pos_movement = new_mouse_pos[0] - self.mouse_pos[0];
                 self.view_matrix.yaw(self.delta_time * mouse_x_pos_movement);
                 self.mouse_pos = list(new_mouse_pos);
+
             elif(new_mouse_pos[0] < self.mouse_pos[0]):
                 mouse_x_pos_movement = self.mouse_pos[0] - new_mouse_pos[0];
                 self.view_matrix.yaw(-self.delta_time * mouse_x_pos_movement);
@@ -323,13 +328,15 @@ class Game:
                             return False;
 
                 elif(direction == 'LEFT' or direction == 'RIGHT'):
-                    if(trans['z'] - scale['z'] / 2 <= eye.zPos  <= trans['z'] + scale['z'] / 2):
+                    if((trans['z'] - scale['z'] / 2) - 2 <= eye.zPos <= (trans['z'] + scale['z'] / 2) + 2):
                         if(trans['x'] < eye.xPos):
-                            if(trans['x'] - scale['x'] / 2 <= eye.xPos - 4 <= trans['x'] + scale['x'] / 2):
+                            if((trans['x'] - scale['x'] / 2) - 2 <= eye.xPos - 4 <= (trans['x'] + scale['x'] / 2) + 2):
                                 return True;
                         elif(trans['x'] > eye.xPos):
-                            if(trans['x'] - scale['x'] / 2 <= eye.xPos + 4 <= trans['x'] + scale['x'] / 2):
+                            if((trans['x'] - scale['x'] / 2) - 2 <= eye.xPos + 4 <= (trans['x'] + scale['x'] / 2) + 2):
                                 return True;
+                        else:
+                            return False;
             else:
                 if(direction == 'FORWARD' or direction == 'BACKWARD'):
                     if(trans['z'] - scale['x'] / 2 <= eye.zPos <= trans['z'] + scale['x'] / 2):
@@ -340,10 +347,19 @@ class Game:
                             elif(trans['x'] > eye.xPos):
                                 if (trans['x'] - scale['z'] / 2 <= eye.xPos + 2 <= trans['x'] + scale['z'] / 2):
                                     return True;
+                            else:
+                                return False;
 
                 elif (direction == 'LEFT' or direction == 'RIGHT'):
-                    pass
-
+                    if ((trans['x'] - scale['z'] / 2) - 2 <= eye.xPos <= (trans['x'] + scale['z'] / 2) + 2):
+                        if (trans['z'] < eye.zPos):
+                            if ((trans['z'] - scale['x'] / 2) - 2 <= eye.zPos - 4 <= (trans['z'] + scale['x'] / 2) + 2):
+                                return True;
+                        elif (trans['z'] > eye.zPos):
+                            if ((trans['z'] - scale['x'] / 2) - 2 <= eye.zPos + 4 <= (trans['z'] + scale['x'] / 2) + 2):
+                                return True;
+                        else:
+                            return False;
 
     def init_game(self):
         pygame.init();
@@ -368,47 +384,35 @@ class Game:
         self.d_key_pressed = False;
 
     def init_level(self):
-        self.object_list = [];
-        '''
-        self.level_list = [
-            {'color': {'r': 1.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': -7.0},
-             'scale': {'x': 41.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
-
-            {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -10.0, 'y': 0.0, 'z': 12.0},
-             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}}
-        '''
-
         self.level_list = [
             {'color': {'r': 1.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': -7.0},
              'scale': {'x': 41.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 8.0, 'y': 0.0, 'z': 0.0},
-             'scale': {'x': 15.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
-
-            {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 3.8, 'y': 0.0, 'z': 8.0},
-             'scale': {'x': 10.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+             'scale': {'x': 15.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -10.0, 'y': 0.0, 'z': 12.0},
-             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
-
-            {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -1.0, 'y': 0.0, 'z': 15.0},
-             'scale': {'x': 15.0, 'y': 5.0, 'z': 2.5}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
+             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 0.0, 'y': 0.0, 'z': 31.0},
              'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': 25.0},
-             'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
+             'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 25.0},
-             'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}},
+             'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
             {'color': {'r': 0.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 60.0},
              'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
             {'color': {'r': 0.5, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
-             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 4.713, 'z': 0.0}}
+             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}}
         ];
+
+        object_3D = {'color': {'r': 0.2, 'g': 0.2, 'b': 0.5}, 'translation': {'x': 1.0, 'y': 0.0, 'z': 5.0},
+                     'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
+        self.level_list.append(object_3D);
 
     def init_gamepad(self):
         self.gamepad_list = [];
@@ -427,3 +431,4 @@ def main():
 
 if __name__ == '__main__':
     main();
+
