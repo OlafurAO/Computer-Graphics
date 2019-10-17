@@ -7,6 +7,7 @@ from Matrix.matrix import *;
 
 screen_size = (1200, 800);
 
+
 class Game:
     def __init__(self):
         self.init_game();
@@ -418,9 +419,11 @@ class Game:
         for gamepad in self.gamepad_list:
             gamepad.init();
 
+
 def main():
     game = Game();
     game.game_loop();
+
 
 if __name__ == '__main__':
     main();
