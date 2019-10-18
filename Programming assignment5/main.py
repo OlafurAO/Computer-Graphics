@@ -1,6 +1,8 @@
 from OpenGL.GL import *;
+from OpenGL.GLU import *
 import pygame;
 import math;
+import sys;
 
 from Shaders.shaders import *;
 from Matrix.matrix import *;
@@ -47,6 +49,12 @@ class Game:
 
         self.player_direction = 0;
         self.player_collision_direction = None;
+
+        self.tex_id01 = self.load_texture_3D('/Assets/Art/test.jpg');
+        self.tex_id02 = self.load_texture_3D('/Assets/Art/doom_spritesheet.png');
+
+        self.sprite = self.load_texture_2D('/Assets/Art/Spritesheets/Player/tile000.png');
+
 
     def update(self):
         self.delta_time = self.clock.tick() / 1000;
@@ -111,7 +119,7 @@ class Game:
 
     def display(self):
         glEnable(GL_DEPTH_TEST);
-        #glDisable(GL_DEPTH_TEST);
+
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, screen_size[0], screen_size[1]);
@@ -140,19 +148,43 @@ class Game:
     def draw_level(self):
         self.level_list.pop();
 
-        object_3D = {'color': {'r': 0.2, 'g': 0.2, 'b': 0.5}, 'translation': {'x': 1.0, 'y': 0.0, 'z': 2.0},
+        object_3D = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 1.0, 'y': 0.0, 'z': 2.0},
                      'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': self.angle}};
         self.level_list.append(object_3D);
 
+        glBindTexture(GL_TEXTURE_2D, self.tex_id01);
         for wall in self.level_list:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
 
+        glBindTexture(GL_TEXTURE_2D, self.tex_id02);
         floor = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
                  'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
 
         self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
 
+        glBindTexture(GL_TEXTURE_2D, self.sprite);
+        eye = self.view_matrix.eye;
+        view_matrix = self.view_matrix;
+
+        #gun = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0},
+        #      'translation': {'x': eye.xPos + math.sin(n.xPos), 'y': eye.yPos - 1.3, 'z': eye.zPos + 1.45},
+        #       'scale': {'x': 2.0, 'y': 1.0, 'z': 0.001}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
+
+        gun = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0},
+               'translation': {'x': view_matrix.n.xPos, 'y': eye.yPos - 1.3, 'z': eye.zPos + 1.45},
+               'scale': {'x': 2.0, 'y': 1.0, 'z': 0.001}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
+
+        #self.draw_cube(gun['color'], gun['translation'], gun['scale'], gun['rotation']);
+
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+        glBindTexture(GL_TEXTURE_2D, self.sprite);
+        glEnable(GL_TEXTURE_2D);
+
+        #self.game_display.blit(self.sprite, (screen_size[0] / 2, screen_size[1] / 2));
+
     def draw_cube(self, color, trans, scale, rotation):
+        #self.shader.set_diffuse_texture(self.tex_id);
+
         self.shader.set_material_diffuse(color['r'], color['g'], color['b']);
         self.model_matrix.push_matrix();
 
@@ -290,7 +322,7 @@ class Game:
 
     def init_game(self):
         pygame.init();
-        pygame.display.set_mode(screen_size, pygame.OPENGL | pygame.DOUBLEBUF);
+        self.game_display = pygame.display.set_mode(screen_size, pygame.OPENGL | pygame.DOUBLEBUF | pygame.OPENGLBLIT);
         pygame.mouse.set_cursor(
                 (8, 8), (0, 0),
                 (0, 0, 0, 0, 0, 0, 0, 0),
@@ -336,6 +368,38 @@ class Game:
             {'color': {'r': 0.5, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
              'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}}
         ];
+
+    def load_texture_3D(self, img_path):
+        surface = pygame.image.load(sys.path[0] + img_path);
+        tex_string = pygame.image.tostring(surface, 'RGBA', 1);
+        width = surface.get_width();
+        height = surface.get_height();
+        tex_id = glGenTextures(1);
+        glBindTexture(GL_TEXTURE_2D, tex_id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_string);
+
+        return tex_id;
+
+    def load_texture_2D(self, img_path):
+        surface = pygame.image.load(sys.path[0] + img_path).convert_alpha();
+        tex_string = pygame.image.tostring(surface, 'RGBA', 1);
+        width = surface.get_width();
+        height = surface.get_height();
+        tex_id = glGenTextures(1);
+
+        glBindTexture(GL_TEXTURE_2D, tex_id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, tex_string)
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        return tex_id;
 
 
 def main():
