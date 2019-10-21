@@ -6,6 +6,7 @@ import sys;
 
 from Shaders.shaders import *;
 from Matrix.matrix import *;
+from Objects.gun import *;
 
 screen_size = (1200, 800);
 
@@ -37,6 +38,10 @@ class Game:
 
         self.cube = Cube();
 
+        eye = self.view_matrix.eye;
+        self.player_gun = Gun(self.view_matrix, eye.xPos, eye.yPos, eye.zPos);
+        self.bullet_list = [];
+
         self.mouse_sensitivity = 5;
         self.angle = 0;
 
@@ -53,8 +58,8 @@ class Game:
         self.tex_id01 = self.load_texture_3D('/Assets/Art/test.jpg');
         self.tex_id02 = self.load_texture_3D('/Assets/Art/doom_spritesheet.png');
 
-        self.sprite = self.load_texture_2D('/Assets/Art/Spritesheets/Player/tile000.png');
-
+        #self.sprite = self.load_texture_2D('/Assets/Art/Spritesheets/Player/tile000.png');
+        self.sprite = self.load_texture_2D('/Assets/Art/gun.jpg');
 
     def update(self):
         self.delta_time = self.clock.tick() / 1000;
@@ -68,6 +73,9 @@ class Game:
         ############### Reset mouse position
         self.update_mouse();
 
+        for bullet in self.bullet_list:
+            bullet.update_movement(self.delta_time);
+
     def update_jump(self):
         if (30 < self.jump_counter <= 60):
             self.view_matrix.slide(0, self.jump_speed * self.delta_time, 0);
@@ -76,6 +84,8 @@ class Game:
 
         if (self.jump_counter > 0):
             self.jump_counter -= 1;
+            eye = self.view_matrix.eye;
+            self.player_gun.set_translation(self.view_matrix, eye.xPos, eye.yPos, eye.zPos);
 
     def update_movement(self):
         if (self.w_key_pressed):
@@ -88,7 +98,7 @@ class Game:
             if not (self.check_collision('BACKWARD')):
                 self.view_matrix.slide(0, 0, self.player_speed * self.delta_time);
             else:
-                self.view_matrix.slide(0, 0, (-self.player_speed + 1) * self.delta_time);
+                self.view_matrix.slide(0, 0, -(self.player_speed + 1) * self.delta_time);
 
         if (self.a_key_pressed):
             if not (self.check_collision('LEFT')):
@@ -101,6 +111,8 @@ class Game:
                 self.view_matrix.slide(-self.player_speed * self.delta_time, 0, 0);
             else:
                 self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
+
+        self.player_gun.set_translation(self.view_matrix, 0, 0, 0);
 
     def update_mouse(self):
         if (self.mouse_pos[0] < 100):
@@ -156,31 +168,20 @@ class Game:
         for wall in self.level_list:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
 
-        glBindTexture(GL_TEXTURE_2D, self.tex_id02);
-        floor = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
+        #glBindTexture(GL_TEXTURE_2D, self.tex_id02);
+        floor = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
                  'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
 
         self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
 
+        #glDeleteTextures(self.tex_id02)
         glBindTexture(GL_TEXTURE_2D, self.sprite);
-        eye = self.view_matrix.eye;
-        view_matrix = self.view_matrix;
+        for gun_part in self.player_gun.get_transformations(self.view_matrix):
+            self.draw_cube(gun_part['color'], gun_part['translation'], gun_part['scale'], gun_part['rotation']);
 
-        #gun = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0},
-        #      'translation': {'x': eye.xPos + math.sin(n.xPos), 'y': eye.yPos - 1.3, 'z': eye.zPos + 1.45},
-        #       'scale': {'x': 2.0, 'y': 1.0, 'z': 0.001}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
-
-        gun = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0},
-               'translation': {'x': view_matrix.n.xPos, 'y': eye.yPos - 1.3, 'z': eye.zPos + 1.45},
-               'scale': {'x': 2.0, 'y': 1.0, 'z': 0.001}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
-
-        #self.draw_cube(gun['color'], gun['translation'], gun['scale'], gun['rotation']);
-
-        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
-        glBindTexture(GL_TEXTURE_2D, self.sprite);
-        glEnable(GL_TEXTURE_2D);
-
-        #self.game_display.blit(self.sprite, (screen_size[0] / 2, screen_size[1] / 2));
+        for i in self.bullet_list:
+            bullet = i.get_transformations();
+            self.draw_cube(bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation'])
 
     def draw_cube(self, color, trans, scale, rotation):
         #self.shader.set_diffuse_texture(self.tex_id);
@@ -221,11 +222,18 @@ class Game:
                 mouse_x_pos_movement = new_mouse_pos[0] - self.mouse_pos[0];
                 self.view_matrix.yaw(self.delta_time * mouse_x_pos_movement);
                 self.mouse_pos = list(new_mouse_pos);
+                self.player_gun.set_rotation(self.delta_time * mouse_x_pos_movement);
 
             elif(new_mouse_pos[0] < self.mouse_pos[0]):
                 mouse_x_pos_movement = self.mouse_pos[0] - new_mouse_pos[0];
                 self.view_matrix.yaw(-self.delta_time * mouse_x_pos_movement);
                 self.mouse_pos = list(new_mouse_pos);
+                self.player_gun.set_rotation(-self.delta_time * mouse_x_pos_movement);
+
+        if(event.type == pygame.MOUSEBUTTONDOWN):
+            if(pygame.mouse.get_pressed()[0]):
+                self.bullet_list.append(Bullet(self.view_matrix));
+
 
         if(event.type == pygame.KEYDOWN):
             if(event.key == pygame.K_q):
@@ -267,6 +275,15 @@ class Game:
                 self.player_sprinting = False;
 
     def check_collision(self, direction):
+        if(direction == 'FORWARD'):
+            self.view_matrix.slide(0, 0, -self.player_speed * self.delta_time);
+        elif(direction == 'BACKWARD'):
+            self.view_matrix.slide(0, 0, self.player_speed * self.delta_time);
+        elif(direction == 'LEFT'):
+            self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
+        elif(direction == 'RIGHT'):
+            self.view_matrix.slide(-self.player_speed * self.delta_time, 0, 0);
+
         eye = self.view_matrix.eye;
 
         for wall in self.level_list:
@@ -276,12 +293,12 @@ class Game:
 
             if(rotation['y'] == 0.0):
                 if(direction == 'FORWARD' or direction == 'BACKWARD'):
-                    if(trans['x'] - scale['x'] / 2 <= eye.xPos <= trans['x'] + scale['x'] / 2):
+                    if(trans['x'] - scale['x'] / 2 < eye.xPos < trans['x'] + scale['x'] / 2):
                         if(trans['z'] < eye.zPos):
-                            if(trans['z'] - scale['z'] / 2 <= eye.zPos - 2 <= trans['z'] + scale['z'] / 2):
+                            if(trans['z'] - scale['z'] / 2 < eye.zPos - 2 < trans['z'] + scale['z'] / 2):
                                 return True;
                         elif(trans['z'] > eye.zPos):
-                            if(trans['z'] - scale['z'] / 2 <= eye.zPos + 2 <= trans['z'] + scale['z'] / 2):
+                            if(trans['z'] - scale['z'] / 2 < eye.zPos + 2 < trans['z'] + scale['z'] / 2):
                                 return True;
                         else:
                             return False;
