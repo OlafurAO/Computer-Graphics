@@ -3,18 +3,12 @@ from Objects.objects import *;
 
 class Gun:
     def __init__(self, view_matrix, x, y, z):
-        self.u = view_matrix.u;
-        self.v = view_matrix.v;
         self.n = view_matrix.n;
         self.coordinates = view_matrix.eye + self.n * -0.5;
-        self.view_matrix = view_matrix;
 
         self.rotation = -1.0;
 
     def set_translation(self, view_matrix, x, y, z):
-        #self.location = Vector(x + 1, y - 0.7, z - 2.5);
-        self.u = view_matrix.u;
-        self.v = view_matrix.v;
         self.n = view_matrix.n;
         self.coordinates = view_matrix.eye + self.n * -0.5;
 
@@ -34,11 +28,8 @@ class Gun:
 
 class Bullet:
     def __init__(self, view_matrix):
-        self.u = view_matrix.u;
-        self.v = view_matrix.v;
-        self.n = view_matrix.n;
-
         self.location = view_matrix.eye;
+        self.n = view_matrix.n;
 
         self.bullet_speed = 50;
 
@@ -48,10 +39,27 @@ class Bullet:
     def get_transformations(self):
         return{
             'color': {'r': 1.0, 'g': 1.0, 'b': 1.0},
-            'translation': {'x': self.location.xPos, 'y': self.location.yPos - 1.0,
+            'translation': {'x': self.location.xPos, 'y': self.location.yPos - 1,
                             'z': self.location.zPos},
             'scale': {'x': 0.5, 'y': 0.5, 'z': 0.5},
             'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}
         };
+
+    def wall_collision_check(self, wall_list, enemy_list):
+        for wall in wall_list:
+            trans = wall['translation'];
+            scale = wall['scale'];
+            rotation = wall['rotation'];
+
+            if(rotation['y'] == 0.0):
+                if(trans['x'] - scale['x'] / 2 < self.location.xPos < trans['x'] + scale['x'] / 2):
+                    if(trans['z'] - scale['z'] / 2 < self.location.zPos < trans['z'] + scale['z'] / 2):
+                        return True;
+            else:
+                if(trans['z'] - scale['x'] / 2 < self.location.zPos < trans['z'] + scale['x'] / 2):
+                    if(trans['x'] - scale['z'] / 2 < self.location.xPos < trans['x'] + scale['z'] / 2):
+                        return True;
+
+
 
 

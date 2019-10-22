@@ -13,6 +13,9 @@ class Point:
     def __sub__(self, other):
         return Vector(self.xPos - other.xPos, self.yPos - other.yPos, self.zPos - other.zPos);
 
+    def __len__(self):
+        return math.sqrt(self.xPos**2 + self.yPos**2 + self.zPos**2);
+
 
 class Vector:
     def __init__(self, xPos, yPos, zPos):

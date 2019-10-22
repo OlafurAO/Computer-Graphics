@@ -7,6 +7,7 @@ import sys;
 from Shaders.shaders import *;
 from Matrix.matrix import *;
 from Objects.gun import *;
+from Objects.enemy import *;
 
 screen_size = (1200, 800);
 
@@ -59,7 +60,8 @@ class Game:
         self.tex_id02 = self.load_texture_3D('/Assets/Art/doom_spritesheet.png');
 
         #self.sprite = self.load_texture_2D('/Assets/Art/Spritesheets/Player/tile000.png');
-        self.sprite = self.load_texture_2D('/Assets/Art/gun.jpg');
+        self.gun_sprite = self.load_texture_2D('/Assets/Art/gun.jpg');
+        self.enemy_sprite = self.load_texture_2D('/Assets/Art/doom_imp.jpg');
 
     def update(self):
         self.delta_time = self.clock.tick() / 1000;
@@ -75,6 +77,13 @@ class Game:
 
         for bullet in self.bullet_list:
             bullet.update_movement(self.delta_time);
+
+            if(bullet.wall_collision_check(self.level_list, self.enemy_list)):
+                self.bullet_list.remove(bullet);
+
+        for enemy in self.enemy_list:
+            enemy.set_translation(self.view_matrix);
+            enemy.set_rotation(self.view_matrix);
 
     def update_jump(self):
         if (30 < self.jump_counter <= 60):
@@ -158,11 +167,13 @@ class Game:
         pygame.display.flip();
 
     def draw_level(self):
+        '''
         self.level_list.pop();
 
         object_3D = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 1.0, 'y': 0.0, 'z': 2.0},
                      'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': self.angle}};
         self.level_list.append(object_3D);
+        '''
 
         glBindTexture(GL_TEXTURE_2D, self.tex_id01);
         for wall in self.level_list:
@@ -175,13 +186,18 @@ class Game:
         self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
 
         #glDeleteTextures(self.tex_id02)
-        glBindTexture(GL_TEXTURE_2D, self.sprite);
+        glBindTexture(GL_TEXTURE_2D, self.gun_sprite);
         for gun_part in self.player_gun.get_transformations(self.view_matrix):
             self.draw_cube(gun_part['color'], gun_part['translation'], gun_part['scale'], gun_part['rotation']);
 
         for i in self.bullet_list:
             bullet = i.get_transformations();
-            self.draw_cube(bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation'])
+            self.draw_cube(bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation']);
+
+        glBindTexture(GL_TEXTURE_2D, self.enemy_sprite);
+        for i in self.enemy_list:
+            enemy = i.get_transformations();
+            self.draw_cube(enemy['color'], enemy['translation'], enemy['scale'], enemy['rotation']);
 
     def draw_cube(self, color, trans, scale, rotation):
         #self.shader.set_diffuse_texture(self.tex_id);
@@ -384,6 +400,10 @@ class Game:
 
             {'color': {'r': 0.5, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
              'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}}
+        ];
+
+        self.enemy_list = [
+            Enemy((1.0, 1.0, 1.0), (0.0, 0.0, 5.0), (2.0, 2.0, 0.01), (0.0, 0.0, 0.0))
         ];
 
     def load_texture_3D(self, img_path):
