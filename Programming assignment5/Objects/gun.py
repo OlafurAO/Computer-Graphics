@@ -60,6 +60,16 @@ class Bullet:
                     if(trans['x'] - scale['z'] / 2 < self.location.xPos < trans['x'] + scale['z'] / 2):
                         return True;
 
+        for i in enemy_list:
+            wall = i.get_transformations();
+            trans = wall['translation'];
+            scale = wall['scale'];
+            rotation = wall['rotation'];
+
+            if(trans['x'] - scale['x'] / 2 < self.location.xPos < trans['x'] + scale['x'] / 2):
+                if(trans['z'] - scale['z'] / 2 < self.location.zPos < trans['z'] + scale['z'] / 2):
+                    print('YE')
+                    return True;
 
 
 

@@ -195,6 +195,7 @@ class Game:
             self.draw_cube(bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation']);
 
         glBindTexture(GL_TEXTURE_2D, self.enemy_sprite);
+        glDeleteTextures(self.enemy_sprite)
         for i in self.enemy_list:
             enemy = i.get_transformations();
             self.draw_cube(enemy['color'], enemy['translation'], enemy['scale'], enemy['rotation']);
@@ -403,7 +404,8 @@ class Game:
         ];
 
         self.enemy_list = [
-            Enemy((1.0, 1.0, 1.0), (0.0, 0.0, 5.0), (2.0, 2.0, 0.01), (0.0, 0.0, 0.0))
+            #Enemy((1.0, 1.0, 1.0), (1.0, 0.0, 5.0), (0.001, 3.0, 3.0), (0.0, 0.0, 0.0)),
+            Enemy((1.0, 1.0, 1.0), (20.0, 0.0, 20.0), (3.0, 3.0, 3.0), (0.0, 0.0, 0.0)),
         ];
 
     def load_texture_3D(self, img_path):
