@@ -13,7 +13,6 @@ class Enemy:
 
     def set_translation(self, player_view_matrix):
         eye = player_view_matrix.eye;
-
         distance = self.get_distance_to_player(eye);
 
         if(distance < 20):
@@ -30,9 +29,13 @@ class Enemy:
     def set_rotation(self, player_view_matrix):
         eye = player_view_matrix.eye;
 
-        if (self.get_distance_to_player(eye) < 20):
-            angle = (eye.zPos - self.location.zPos) / (eye.xPos - self.location.xPos);
-            self.rotation[1] = math.atan(-angle);
+        angle = (eye.zPos - self.location.zPos) / (eye.xPos - self.location.xPos);
+        self.rotation[1] = math.atan(-angle);
+
+    def damage_enemy(self):
+        self.health -= 1;
+        self.color = [1.0, 0.0, 0.0];
+        print(self.health)
 
     def get_transformations(self):
         return {
@@ -47,3 +50,6 @@ class Enemy:
     def get_distance_to_player(self, eye):
         return math.sqrt((eye.xPos - self.location.xPos) ** 2
                          + (eye.zPos - self.location.zPos) ** 2);
+
+    def is_dead(self):
+        return self.health <= 0;

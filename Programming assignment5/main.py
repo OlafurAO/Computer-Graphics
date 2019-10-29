@@ -78,10 +78,13 @@ class Game:
         for bullet in self.bullet_list:
             bullet.update_movement(self.delta_time);
 
-            if(bullet.wall_collision_check(self.level_list, self.enemy_list)):
+            if(bullet.wall_collision_check(self.level_list) or bullet.enemy_collision_check(self.enemy_list)):
                 self.bullet_list.remove(bullet);
 
         for enemy in self.enemy_list:
+            if(enemy.is_dead()):
+                self.enemy_list.remove(enemy);
+
             enemy.set_translation(self.view_matrix);
             enemy.set_rotation(self.view_matrix);
 
@@ -201,8 +204,6 @@ class Game:
             self.draw_cube(enemy['color'], enemy['translation'], enemy['scale'], enemy['rotation']);
 
     def draw_cube(self, color, trans, scale, rotation):
-        #self.shader.set_diffuse_texture(self.tex_id);
-
         self.shader.set_material_diffuse(color['r'], color['g'], color['b']);
         self.model_matrix.push_matrix();
 
@@ -293,13 +294,13 @@ class Game:
 
     def check_collision(self, direction):
         if(direction == 'FORWARD'):
-            self.view_matrix.slide(0, 0, -self.player_speed * self.delta_time);
+            self.view_matrix.slide(0, 0, -10 * self.delta_time);
         elif(direction == 'BACKWARD'):
-            self.view_matrix.slide(0, 0, self.player_speed * self.delta_time);
+            self.view_matrix.slide(0, 0, 10 * self.delta_time);
         elif(direction == 'LEFT'):
-            self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
+            self.view_matrix.slide(10 * self.delta_time, 0, 0);
         elif(direction == 'RIGHT'):
-            self.view_matrix.slide(-self.player_speed * self.delta_time, 0, 0);
+            self.view_matrix.slide(-10 * self.delta_time, 0, 0);
 
         eye = self.view_matrix.eye;
 

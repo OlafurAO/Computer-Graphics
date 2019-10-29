@@ -23,7 +23,7 @@ class Gun:
                 'scale': {'x': 1.0, 'y': 0.5, 'z': 3.0},
                 'rotation': {'x': 0.0, 'y': self.rotation, 'z': 0.0}
             },
-        ]
+        ];
 
 
 class Bullet:
@@ -45,7 +45,7 @@ class Bullet:
             'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}
         };
 
-    def wall_collision_check(self, wall_list, enemy_list):
+    def wall_collision_check(self, wall_list):
         for wall in wall_list:
             trans = wall['translation'];
             scale = wall['scale'];
@@ -60,16 +60,13 @@ class Bullet:
                     if(trans['x'] - scale['z'] / 2 < self.location.xPos < trans['x'] + scale['z'] / 2):
                         return True;
 
+    def enemy_collision_check(self, enemy_list):
         for i in enemy_list:
-            wall = i.get_transformations();
-            trans = wall['translation'];
-            scale = wall['scale'];
-            rotation = wall['rotation'];
+            enemy = i.get_transformations();
+            trans = enemy['translation'];
+            scale = enemy['scale'];
 
             if(trans['x'] - scale['x'] / 2 < self.location.xPos < trans['x'] + scale['x'] / 2):
                 if(trans['z'] - scale['z'] / 2 < self.location.zPos < trans['z'] + scale['z'] / 2):
-                    print('YE')
+                    i.damage_enemy();
                     return True;
-
-
-
