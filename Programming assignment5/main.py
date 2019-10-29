@@ -8,6 +8,7 @@ from Shaders.shaders import *;
 from Matrix.matrix import *;
 from Objects.gun import *;
 from Objects.enemy import *;
+import obj_3D_loading;
 
 screen_size = (1200, 800);
 
@@ -40,7 +41,13 @@ class Game:
         self.cube = Cube();
 
         eye = self.view_matrix.eye;
-        self.player_gun = Gun(self.view_matrix, eye.xPos, eye.yPos, eye.zPos);
+
+        gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                '/Assets/Art/models', 'shotgunShort.obj');
+        bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                '/Assets/Art/models', 'ammo_pistol.obj');
+
+        self.player_gun = Gun(gun_model, bullet_model, self.view_matrix, eye.xPos, eye.yPos, eye.zPos);
         self.bullet_list = [];
 
         self.mouse_sensitivity = 5;
@@ -97,7 +104,7 @@ class Game:
         if (self.jump_counter > 0):
             self.jump_counter -= 1;
             eye = self.view_matrix.eye;
-            self.player_gun.set_translation(self.view_matrix, eye.xPos, eye.yPos, eye.zPos);
+            self.player_gun.set_translation(self.view_matrix);
 
     def update_movement(self):
         if (self.w_key_pressed):
@@ -124,7 +131,8 @@ class Game:
             else:
                 self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
 
-        self.player_gun.set_translation(self.view_matrix, 0, 0, 0);
+        self.player_gun.set_translation(self.view_matrix)
+        #self.player_gun.set_translation(self.view_matrix, 0, 0, 0);
 
     def update_mouse(self):
         if (self.mouse_pos[0] < 100):
@@ -156,10 +164,10 @@ class Game:
         self.shader.set_eye_position(self.view_matrix.eye);
 
         self.shader.set_light_position(Point(0.0, 10.0, 0.0));
-        self.shader.set_light_diffuse(1.0, 1.0, 1.0);
-        self.shader.set_light_specular(1.0, 1.0, 1.0);
+        self.shader.set_light_diffuse(Color(1.0, 1.0, 1.0));
+        self.shader.set_light_specular(Color(1.0, 1.0, 1.0));
 
-        self.shader.set_material_specular(1.0, 1.0, 1.0);
+        self.shader.set_material_specular(Color(1.0, 1.0, 1.0));
         self.shader.set_material_shininess(25);
 
         self.model_matrix.load_identity();
@@ -170,32 +178,26 @@ class Game:
         pygame.display.flip();
 
     def draw_level(self):
-        '''
-        self.level_list.pop();
-
-        object_3D = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 1.0, 'y': 0.0, 'z': 2.0},
-                     'scale': {'x': 1.0, 'y': 1.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': self.angle}};
-        self.level_list.append(object_3D);
-        '''
-
         glBindTexture(GL_TEXTURE_2D, self.tex_id01);
         for wall in self.level_list:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
-
         #glBindTexture(GL_TEXTURE_2D, self.tex_id02);
         floor = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
                  'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
-
         self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
 
         #glDeleteTextures(self.tex_id02)
-        glBindTexture(GL_TEXTURE_2D, self.gun_sprite);
-        for gun_part in self.player_gun.get_transformations(self.view_matrix):
-            self.draw_cube(gun_part['color'], gun_part['translation'], gun_part['scale'], gun_part['rotation']);
+        #glBindTexture(GL_TEXTURE_2D, self.gun_sprite);
+        gun_trans = self.player_gun.get_transformations();
+        gun_model = self.player_gun.get_model();
+
+        self.draw_model(gun_model, gun_trans['color'], gun_trans['translation'],
+                        gun_trans['scale'], gun_trans['rotation']);
 
         for i in self.bullet_list:
             bullet = i.get_transformations();
-            self.draw_cube(bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation']);
+            model = i.get_model();
+            self.draw_model(model, bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation']);
 
         glBindTexture(GL_TEXTURE_2D, self.enemy_sprite);
         glDeleteTextures(self.enemy_sprite)
@@ -204,7 +206,7 @@ class Game:
             self.draw_cube(enemy['color'], enemy['translation'], enemy['scale'], enemy['rotation']);
 
     def draw_cube(self, color, trans, scale, rotation):
-        self.shader.set_material_diffuse(color['r'], color['g'], color['b']);
+        self.shader.set_material_diffuse(Color(color['r'], color['g'], color['b']));
         self.model_matrix.push_matrix();
 
         self.model_matrix.add_translation(trans['x'], trans['y'], trans['z']);
@@ -217,6 +219,22 @@ class Game:
 
         self.shader.set_model_matrix(self.model_matrix.get_model_matrix());
         self.cube.draw_cube();
+        self.model_matrix.pop_matrix();
+
+    def draw_model(self, model, color, trans, scale, rotation):
+        self.shader.set_material_diffuse(Color(color['r'], color['g'], color['b']));
+        self.model_matrix.push_matrix();
+
+        self.model_matrix.add_translation(trans['x'], trans['y'], trans['z']);
+
+        self.model_matrix.add_rotation_x(rotation['x']);
+        self.model_matrix.add_rotation_y(rotation['y']);
+        self.model_matrix.add_rotation_z(rotation['z']);
+
+        self.model_matrix.add_scaling(scale['x'], scale['y'], scale['z']);
+
+        self.shader.set_model_matrix(self.model_matrix.get_model_matrix());
+        model.draw(self.shader)
         self.model_matrix.pop_matrix();
 
     def game_loop(self):
@@ -250,7 +268,8 @@ class Game:
 
         if(event.type == pygame.MOUSEBUTTONDOWN):
             if(pygame.mouse.get_pressed()[0]):
-                self.bullet_list.append(Bullet(self.view_matrix));
+                bullet = self.player_gun.fire_gun(self.view_matrix);
+                self.bullet_list.append(bullet);
 
 
         if(event.type == pygame.KEYDOWN):

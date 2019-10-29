@@ -1,4 +1,5 @@
 from OpenGL.GL import *;
+from OpenGL.GLU import *
 import math;
 import sys;
 
@@ -56,7 +57,9 @@ class Shader3D:
         self.material_specular_location         = glGetUniformLocation(self.renderer, 'u_material_specular');
         self.material_shininess_location        = glGetUniformLocation(self.renderer, 'u_material_shininess');
 
-        self.diffuse_texture_location        = glGetUniformLocation(self.renderer, 'u_tex01');
+        self.diffuse_texture_location           = glGetUniformLocation(self.renderer, 'u_tex01');
+
+        self.using_texture_location             = glGetUniformLocation(self.renderer, 'u_using_texture');
 
     def render(self):
         glUseProgram(self.renderer);
@@ -76,17 +79,17 @@ class Shader3D:
     def set_light_position(self, pos):
         glUniform4f(self.light_pos_location, pos.xPos, pos.yPos, pos.zPos, 1.0);
 
-    def set_light_diffuse(self, r, g, b):
-        glUniform4f(self.light_diffuse_location, r, g, b, 1.0);
+    def set_light_diffuse(self, color):
+        glUniform4f(self.light_diffuse_location, color.r, color.g, color.b, 1.0);
 
-    def set_light_specular(self, r, g, b):
-        glUniform4f(self.light_specular_location, r, g, b, 1.0);
+    def set_light_specular(self, color):
+        glUniform4f(self.light_specular_location, color.r, color.g, color.b, 1.0);
 
-    def set_material_diffuse(self, r, g, b):
-        glUniform4f(self.material_diffuse_location, r, g, b, 1.0);
+    def set_material_diffuse(self, color):
+        glUniform4f(self.material_diffuse_location, color.r, color.g, color.b, 1.0);
 
-    def set_material_specular(self, r, g, b):
-        glUniform4f(self.material_specular_location, r, g, b, 1.0);
+    def set_material_specular(self, color):
+        glUniform4f(self.material_specular_location, color.r, color.g, color.b, 1.0);
 
     def set_material_shininess(self, shininess):
         glUniform1f(self.material_shininess_location, shininess);
@@ -102,3 +105,11 @@ class Shader3D:
 
     def set_uv_attribute(self, vertex_array):
         glVertexAttribPointer(self.uv_location, 2, GL_FLOAT, False, 0, vertex_array);
+
+    def set_attribute_buffers(self, vertex_buffer_id):
+        glUniform1f(self.using_texture_location, 0.0);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
+        glVertexAttribPointer(self.position_vec_location, 3, GL_FLOAT, False, 6 * sizeof(GLfloat),
+                              OpenGL.GLU.ctypes.c_void_p(0))
+        glVertexAttribPointer(self.normal_vector_location, 3, GL_FLOAT, False, 6 * sizeof(GLfloat),
+                              OpenGL.GLU.ctypes.c_void_p(3 * sizeof(GLfloat)))
