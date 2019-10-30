@@ -12,6 +12,8 @@ import obj_3D_loading;
 
 screen_size = (1200, 800);
 
+# All 3d models are found on the site https://www.kenney.nl
+
 # NOTE: this game utilizes mouse controls and works best with an actual mouse, rather than a touchpad
 class Game:
     def __init__(self):
@@ -40,16 +42,9 @@ class Game:
 
         self.cube = Cube();
 
-        eye = self.view_matrix.eye;
-        self.initialize_weapons();
-
-        gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
-                                                '/Assets/Art/models', 'pistol.obj');
-        bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
-                                                '/Assets/Art/models', 'ammo_pistol.obj');
-
-        self.player_gun = Gun(gun_model, bullet_model, self.view_matrix, eye.xPos, eye.yPos, eye.zPos);
-
+        self.weapon_list = self.init_weapons();
+        self.current_weapon_id = 0;
+        self.gun_fire_timer = 0;
 
         self.bullet_list = [];
 
@@ -67,11 +62,6 @@ class Game:
         self.player_collision_direction = None;
 
         self.tex_id01 = self.load_texture_3D('/Assets/Art/test.jpg');
-        self.tex_id02 = self.load_texture_3D('/Assets/Art/doom_spritesheet.png');
-
-        #self.sprite = self.load_texture_2D('/Assets/Art/Spritesheets/Player/tile000.png');
-        self.gun_sprite = self.load_texture_2D('/Assets/Art/gun.jpg');
-        self.enemy_sprite = self.load_texture_2D('/Assets/Art/doom_imp.jpg');
 
     def update(self):
         self.delta_time = self.clock.tick() / 1000;
@@ -88,7 +78,9 @@ class Game:
         for bullet in self.bullet_list:
             bullet.update_movement(self.delta_time);
 
-            if(bullet.wall_collision_check(self.level_list) or bullet.enemy_collision_check(self.enemy_list)):
+            if(bullet.wall_collision_check(self.level_list) or
+               bullet.enemy_collision_check(self.enemy_list) or
+               bullet.get_time() == 50):
                 self.bullet_list.remove(bullet);
 
         for enemy in self.enemy_list:
@@ -105,9 +97,9 @@ class Game:
             self.view_matrix.slide(0, -self.jump_speed * self.delta_time, 0);
 
         if (self.jump_counter > 0):
+            for weapon in self.weapon_list:
+                weapon.set_translation(self.view_matrix);
             self.jump_counter -= 1;
-            eye = self.view_matrix.eye;
-            self.player_gun.set_translation(self.view_matrix);
 
     def update_movement(self):
         if (self.w_key_pressed):
@@ -134,10 +126,19 @@ class Game:
             else:
                 self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
 
-        self.player_gun.set_translation(self.view_matrix)
-        #self.player_gun.set_translation(self.view_matrix, 0, 0, 0);
+        for weapon in self.weapon_list:
+            weapon.set_translation(self.view_matrix);
 
     def update_mouse(self):
+        if(self.left_mouse_pressed):
+            if(self.weapon_list[self.current_weapon_id].is_automatic()):
+                bullet = self.weapon_list[self.current_weapon_id].fire_gun(self.view_matrix);
+                self.bullet_list.append(bullet);
+            else:
+                bullet = self.weapon_list[self.current_weapon_id].fire_gun(self.view_matrix);
+                self.bullet_list.append(bullet);
+                self.left_mouse_pressed = False;
+
         if (self.mouse_pos[0] < 100):
             pygame.mouse.set_pos(screen_size[0] / 2, self.mouse_pos[1]);
             self.mouse_pos[0] = screen_size[0] / 2;
@@ -176,24 +177,26 @@ class Game:
         self.model_matrix.load_identity();
         self.cube.set_cube_vertices(self.shader);
 
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         self.draw_level();
 
         pygame.display.flip();
+
+        glDisable(GL_BLEND);
 
     def draw_level(self):
         glBindTexture(GL_TEXTURE_2D, self.tex_id01);
         for wall in self.level_list:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
-        #glBindTexture(GL_TEXTURE_2D, self.tex_id02);
+
         floor = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
                  'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
         self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
 
-        #glDeleteTextures(self.tex_id02)
-        #glBindTexture(GL_TEXTURE_2D, self.gun_sprite);
-        gun_trans = self.player_gun.get_transformations();
-        gun_model = self.player_gun.get_model();
-
+        gun_trans = self.weapon_list[self.current_weapon_id].get_transformations();
+        gun_model = self.weapon_list[self.current_weapon_id].get_model();
         self.draw_model(gun_model, gun_trans['color'], gun_trans['translation'],
                         gun_trans['scale'], gun_trans['rotation']);
 
@@ -202,16 +205,15 @@ class Game:
             model = i.get_model();
             self.draw_model(model, bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation']);
 
-        #glBindTexture(GL_TEXTURE_2D, self.enemy_sprite);
-        #glDeleteTextures(self.enemy_sprite)
         for i in self.enemy_list:
+            glBindTexture(GL_TEXTURE_2D, i.get_texture());
             enemy = i.get_transformations();
             model = i.get_model();
 
             self.draw_model(model, enemy['color'], enemy['translation'], enemy['scale'], enemy['rotation']);
 
     def draw_cube(self, color, trans, scale, rotation):
-        self.shader.set_material_diffuse(Color(color['r'], color['g'], color['b']));
+        self.shader.set_material_diffuse(Color(color['r'], color['g'], color['b']), 1.0);
         self.model_matrix.push_matrix();
 
         self.model_matrix.add_translation(trans['x'], trans['y'], trans['z']);
@@ -263,19 +265,26 @@ class Game:
                 mouse_x_pos_movement = new_mouse_pos[0] - self.mouse_pos[0];
                 self.view_matrix.yaw(self.delta_time * mouse_x_pos_movement);
                 self.mouse_pos = list(new_mouse_pos);
-                self.player_gun.set_rotation(self.delta_time * mouse_x_pos_movement);
+
+                for weapon in self.weapon_list:
+                    weapon.set_rotation(self.delta_time * mouse_x_pos_movement);
 
             elif(new_mouse_pos[0] < self.mouse_pos[0]):
                 mouse_x_pos_movement = self.mouse_pos[0] - new_mouse_pos[0];
                 self.view_matrix.yaw(-self.delta_time * mouse_x_pos_movement);
                 self.mouse_pos = list(new_mouse_pos);
-                self.player_gun.set_rotation(-self.delta_time * mouse_x_pos_movement);
+
+                for weapon in self.weapon_list:
+                    weapon.set_rotation(-self.delta_time * mouse_x_pos_movement);
 
         if(event.type == pygame.MOUSEBUTTONDOWN):
             if(pygame.mouse.get_pressed()[0]):
-                bullet = self.player_gun.fire_gun(self.view_matrix);
-                self.bullet_list.append(bullet);
-
+                self.left_mouse_pressed = True;
+                self.gun_fire_timer = 0;
+        elif(event.type == pygame.MOUSEBUTTONUP):
+            if(event.button == 1):
+                self.left_mouse_pressed = False;
+                self.gun_fire_timer = 0;
 
         if(event.type == pygame.KEYDOWN):
             if(event.key == pygame.K_q):
@@ -299,6 +308,17 @@ class Game:
                 self.sprint_strafe_counter = 100;
                 self.player_speed = 20;
                 self.player_sprinting = True;
+
+            if(event.key == pygame.K_1):
+                self.change_weapon(0);
+            elif(event.key == pygame.K_2):
+                self.change_weapon(1);
+            elif (event.key == pygame.K_3):
+                self.change_weapon(2);
+            elif (event.key == pygame.K_4):
+                self.change_weapon(3);
+            elif (event.key == pygame.K_5):
+                self.change_weapon(4);
 
         elif(event.type == pygame.KEYUP):
             if(event.key == pygame.K_w):
@@ -379,6 +399,9 @@ class Game:
                         else:
                             return False;
 
+    def change_weapon(self, weapon_id):
+        self.current_weapon_id = weapon_id;
+
     def init_game(self):
         pygame.init();
         self.game_display = pygame.display.set_mode(screen_size, pygame.OPENGL | pygame.DOUBLEBUF | pygame.OPENGLBLIT);
@@ -389,8 +412,10 @@ class Game:
         );
 
     def init_controls(self):
+        self.left_mouse_pressed = False;
         self.mouse_pos = list(pygame.mouse.get_pos());
         self.tmp_mouse_pos = 0;
+
         self.mouse_move_up = False;
         self.mouse_move_down = False;
         self.mouse_move_left = False;
@@ -430,11 +455,52 @@ class Game:
 
         enemy_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                 '/Assets/Art/models', 'advancedCharacter.obj');
-
+        texture = self.load_texture_3D('/Assets/Art/models/skin_orc.png');
         self.enemy_list = [
             #Enemy((1.0, 1.0, 1.0), (1.0, 0.0, 5.0), (0.001, 3.0, 3.0), (0.0, 0.0, 0.0)),
-            Enemy(enemy_model, (0.0, 0.0, 0.0), (20.0, 0.0, 20.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0)),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 20.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0)),
         ];
+
+    def init_weapons(self):
+        weapon_list = [];
+        gun_texture = '';
+
+        gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                 '/Assets/Art/models/weapons', 'pistolSilencer.obj');
+        bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                    '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 1, 0, self.view_matrix, False));
+
+        gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                 '/Assets/Art/models/weapons', 'uzi.obj');
+        bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                    '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 0.5, 1, self.view_matrix, True));
+
+        gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                 '/Assets/Art/models/weapons', 'machinegun.obj');
+        bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                    '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 1, 1, self.view_matrix, True));
+
+        gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                 '/Assets/Art/models/weapons', 'shotgunShort.obj');
+        bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                    '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 3, 0, self.view_matrix, False));
+
+        gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                 '/Assets/Art/models/weapons', 'sniper.obj');
+        bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                    '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 5, 5, self.view_matrix, False));
+
+        return weapon_list;
 
     def load_texture_3D(self, img_path):
         surface = pygame.image.load(sys.path[0] + img_path);

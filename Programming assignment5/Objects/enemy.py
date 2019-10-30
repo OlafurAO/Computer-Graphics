@@ -2,8 +2,9 @@ from Objects.objects import *;
 import math;
 
 class Enemy:
-    def __init__(self, model, color, trans, scale, rotation):
+    def __init__(self, model, texture, color, trans, scale, rotation):
         self.model = model;
+        self.texture = texture;
         self.color = color;
         self.location = Vector(trans[0], trans[1], trans[2]);
         self.scale = scale;
@@ -35,9 +36,8 @@ class Enemy:
         angle = (eye.zPos - self.location.zPos) / (eye.xPos - self.location.xPos);
         self.rotation[1] = math.atan(-angle);
 
-    def damage_enemy(self):
-        self.health -= 1;
-        self.color = [1.0, 0.0, 0.0];
+    def damage_enemy(self, damage):
+        self.health -= damage;
         print(self.health)
 
         if not(self.aggroed):
@@ -55,6 +55,9 @@ class Enemy:
 
     def get_model(self):
         return self.model;
+
+    def get_texture(self):
+        return self.texture;
 
     def get_distance_to_player(self, eye):
         return math.sqrt((eye.xPos - self.location.xPos) ** 2

@@ -33,4 +33,6 @@ void main(void) {
 
     gl_FragColor = u_light_diffuse * material_diffuse * lambert
         + u_light_specular * u_material_specular * pow(phong, u_material_shininess);
+
+    gl_FragColor.a = u_material_diffuse.a;
 }

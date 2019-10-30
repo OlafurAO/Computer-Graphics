@@ -85,8 +85,8 @@ class Shader3D:
     def set_light_specular(self, color):
         glUniform4f(self.light_specular_location, color.r, color.g, color.b, 1.0);
 
-    def set_material_diffuse(self, color):
-        glUniform4f(self.material_diffuse_location, color.r, color.g, color.b, 1.0);
+    def set_material_diffuse(self, color, alpha=1.0):
+        glUniform4f(self.material_diffuse_location, color.r, color.g, color.b, alpha);
 
     def set_material_specular(self, color):
         glUniform4f(self.material_specular_location, color.r, color.g, color.b, 1.0);
@@ -113,3 +113,13 @@ class Shader3D:
                               OpenGL.GLU.ctypes.c_void_p(0))
         glVertexAttribPointer(self.normal_vector_location, 3, GL_FLOAT, False, 6 * sizeof(GLfloat),
                               OpenGL.GLU.ctypes.c_void_p(3 * sizeof(GLfloat)))
+
+    def set_attribute_buffers_with_uv(self, vertex_buffer_id):
+        glUniform1f(self.using_texture_location, 1.0);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
+        glVertexAttribPointer(self.position_vec_location, 3, GL_FLOAT, False, 8 * sizeof(GLfloat),
+                              OpenGL.GLU.ctypes.c_void_p(0))
+        glVertexAttribPointer(self.normal_vector_location, 3, GL_FLOAT, False, 8 * sizeof(GLfloat),
+                              OpenGL.GLU.ctypes.c_void_p(3 * sizeof(GLfloat)))
+        glVertexAttribPointer(self.uv_location, 3, GL_FLOAT, False, 8 * sizeof(GLfloat),
+                              OpenGL.GLU.ctypes.c_void_p(6 * sizeof(GLfloat)))

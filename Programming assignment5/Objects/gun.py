@@ -2,12 +2,17 @@ import math;
 from Objects.objects import *;
 
 class Gun:
-    def __init__(self, model, bullet_model, view_matrix, x, y, z):
+    def __init__(self, model, bullet_model, texture, damage, fire_rate, view_matrix, automatic):
         self.model = model;
         self.bullet_model = bullet_model;
-        self.n = view_matrix.n;
-        self.coordinates = Vector(view_matrix.eye.xPos, view_matrix.eye.yPos - 1.0, view_matrix.eye.zPos - 2.5)
+        self.texture = texture;
+        self.damage = damage;
+        self.fire_rate = fire_rate;
+        self.automatic = automatic;
 
+        self.n = view_matrix.n;
+        self.coordinates = Vector(view_matrix.eye.xPos, view_matrix.eye.yPos - 1.0,
+                                  view_matrix.eye.zPos - 2.5)
         self.rotation = -1.0;
 
     def player_move_x(self, speed):
@@ -41,7 +46,7 @@ class Gun:
         self.coordinates.zPos = z;
 
     def fire_gun(self, view_matrix):
-        return Bullet(self.bullet_model, view_matrix, self.rotation);
+        return Bullet(self.bullet_model, self.damage, view_matrix, self.rotation);
 
     def get_model(self):
         return self.model;
@@ -55,33 +60,47 @@ class Gun:
             'rotation': {'x': 0.0, 'y': self.rotation + 2 * math.pi/2, 'z': 0.0}
         };
 
+    def get_fire_rate(self):
+        return self.fire_rate;
+
+    def is_automatic(self):
+        return self.automatic;
+
 
 class Bullet:
-    def __init__(self, model, view_matrix, rotation):
+    def __init__(self, model, damage, view_matrix, rotation):
         self.model = model;
+        self.damage = damage;
         self.location = view_matrix.eye + view_matrix.n * 0.01;
         self.n = view_matrix.n;
-
-        self.location.xPos += 3.2;
 
         self.rotation = rotation;
 
         self.bullet_speed = 100;
 
+        # On automatic fire, some bullets go through the walls.
+        # That's why after a certain amount of time, the bullets
+        # are removed from the bullet list
+        self.bullet_time = 0;
+
     def update_movement(self, delta_time):
         self.location += self.n * -delta_time * self.bullet_speed;
+        self.bullet_time += 1;
 
     def get_model(self):
         return self.model;
 
     def get_transformations(self):
         return{
-            'color': {'r': 0.0, 'g': 1.0, 'b': 1.0},
+            'color': {'r': 0.0, 'g': 0.0, 'b': 0.0},
             'translation': {'x': self.location.xPos, 'y': self.location.yPos - 1,
                             'z': self.location.zPos},
             'scale': {'x': 100.0, 'y': 100.0, 'z': 100.0},
             'rotation': {'x': 0.0, 'y': self.rotation - math.pi/2, 'z': math.pi / 2}
         };
+
+    def get_time(self):
+        return self.bullet_time;
 
     def wall_collision_check(self, wall_list):
         for wall in wall_list:
@@ -106,5 +125,5 @@ class Bullet:
 
             if(trans['x'] - scale['x'] / 2 < self.location.xPos < trans['x'] + scale['x'] / 2):
                 if(trans['z'] - scale['z'] / 2 < self.location.zPos < trans['z'] + scale['z'] / 2):
-                    i.damage_enemy();
+                    i.damage_enemy(self.damage);
                     return True;

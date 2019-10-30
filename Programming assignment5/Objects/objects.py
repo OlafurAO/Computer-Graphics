@@ -224,9 +224,12 @@ class MeshModel:
     def draw(self, shader):
         for mesh_id, mesh_material in self.mesh_materials.items():
             material = self.materials[mesh_material]
+
             shader.set_material_diffuse(material.diffuse)
             shader.set_material_specular(material.specular)
             shader.set_material_shininess(material.shininess)
             shader.set_attribute_buffers(self.vertex_buffer_ids[mesh_id])
+            #shader.set_attribute_buffers_with_uv(self.vertex_buffer_ids[mesh_id])
+
             glDrawArrays(GL_TRIANGLES, 0, self.vertex_counts[mesh_id])
             glBindBuffer(GL_ARRAY_BUFFER, 0)
