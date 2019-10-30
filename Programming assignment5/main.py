@@ -41,13 +41,16 @@ class Game:
         self.cube = Cube();
 
         eye = self.view_matrix.eye;
+        self.initialize_weapons();
 
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
-                                                '/Assets/Art/models', 'shotgunShort.obj');
+                                                '/Assets/Art/models', 'pistol.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                 '/Assets/Art/models', 'ammo_pistol.obj');
 
         self.player_gun = Gun(gun_model, bullet_model, self.view_matrix, eye.xPos, eye.yPos, eye.zPos);
+
+
         self.bullet_list = [];
 
         self.mouse_sensitivity = 5;
@@ -199,11 +202,13 @@ class Game:
             model = i.get_model();
             self.draw_model(model, bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation']);
 
-        glBindTexture(GL_TEXTURE_2D, self.enemy_sprite);
-        glDeleteTextures(self.enemy_sprite)
+        #glBindTexture(GL_TEXTURE_2D, self.enemy_sprite);
+        #glDeleteTextures(self.enemy_sprite)
         for i in self.enemy_list:
             enemy = i.get_transformations();
-            self.draw_cube(enemy['color'], enemy['translation'], enemy['scale'], enemy['rotation']);
+            model = i.get_model();
+
+            self.draw_model(model, enemy['color'], enemy['translation'], enemy['scale'], enemy['rotation']);
 
     def draw_cube(self, color, trans, scale, rotation):
         self.shader.set_material_diffuse(Color(color['r'], color['g'], color['b']));
@@ -423,9 +428,12 @@ class Game:
              'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}}
         ];
 
+        enemy_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                '/Assets/Art/models', 'advancedCharacter.obj');
+
         self.enemy_list = [
             #Enemy((1.0, 1.0, 1.0), (1.0, 0.0, 5.0), (0.001, 3.0, 3.0), (0.0, 0.0, 0.0)),
-            Enemy((1.0, 1.0, 1.0), (20.0, 0.0, 20.0), (3.0, 3.0, 3.0), (0.0, 0.0, 0.0)),
+            Enemy(enemy_model, (0.0, 0.0, 0.0), (20.0, 0.0, 20.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0)),
         ];
 
     def load_texture_3D(self, img_path):

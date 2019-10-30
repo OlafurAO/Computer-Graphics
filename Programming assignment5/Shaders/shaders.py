@@ -107,7 +107,7 @@ class Shader3D:
         glVertexAttribPointer(self.uv_location, 2, GL_FLOAT, False, 0, vertex_array);
 
     def set_attribute_buffers(self, vertex_buffer_id):
-        glUniform1f(self.using_texture_location, 0.0);
+        glUniform1f(self.using_texture_location, 1.0);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
         glVertexAttribPointer(self.position_vec_location, 3, GL_FLOAT, False, 6 * sizeof(GLfloat),
                               OpenGL.GLU.ctypes.c_void_p(0))

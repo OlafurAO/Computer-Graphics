@@ -59,12 +59,14 @@ class Gun:
 class Bullet:
     def __init__(self, model, view_matrix, rotation):
         self.model = model;
-        self.location = view_matrix.eye;
+        self.location = view_matrix.eye + view_matrix.n * 0.01;
         self.n = view_matrix.n;
+
+        self.location.xPos += 3.2;
 
         self.rotation = rotation;
 
-        self.bullet_speed = 200;
+        self.bullet_speed = 100;
 
     def update_movement(self, delta_time):
         self.location += self.n * -delta_time * self.bullet_speed;
