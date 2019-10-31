@@ -17,6 +17,7 @@ class Gun:
         self.rotation = -1.0;
         self.rotation_x = 0.0;
         self.fire_timer = 0;
+        self.fire_rate_timer = 0;
 
     def player_move_x(self, speed):
         self.coordinates.xPos -= speed;
@@ -42,6 +43,9 @@ class Gun:
         else:
             self.cease_fire();
 
+        if(self.fire_rate_timer > 0):
+            self.fire_rate_timer -= 1;
+
     def set_rotation(self, speed):
         self.rotation += speed;
 
@@ -59,12 +63,14 @@ class Gun:
         self.coordinates.zPos = z;
 
     def fire_gun(self, view_matrix):
-        if(self.fire_timer == 0):
-            self.fire_timer = 12;
+        if(self.fire_rate_timer == 0):
+            if(self.fire_timer == 0):
+                self.fire_timer = 12;
 
-        self.gunfire_sfx.play();
+            self.fire_rate_timer = self.fire_rate;
+            self.gunfire_sfx.play();
 
-        return Bullet(self.bullet_model, self.damage, view_matrix, self.rotation);
+            return Bullet(self.bullet_model, self.damage, view_matrix, self.rotation);
 
     def cease_fire(self):
         self.rotation_x = 0.0;

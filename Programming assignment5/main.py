@@ -3,6 +3,7 @@ from OpenGL.GLU import *
 import pygame;
 import math;
 import sys;
+import random;
 
 from Shaders.shaders import *;
 from Matrix.matrix import *;
@@ -64,6 +65,8 @@ class Game:
         self.player_direction = 0;
         self.player_collision_direction = None;
 
+        self.enemy_population_timer = 0;
+
         self.tex_id01 = self.load_texture_3D('/Assets/Art/test.jpg');
         self.reticule_texture = self.load_texture_3D('/Assets/Art/reticule.png')
 
@@ -95,6 +98,7 @@ class Game:
             enemy.set_rotation(self.view_matrix);
 
         self.reticule.set_translation(self.view_matrix);
+        self.repopulate_enemy_list();
 
     def update_jump(self):
         if (30 < self.jump_counter <= 60):
@@ -106,6 +110,8 @@ class Game:
             for weapon in self.weapon_list:
                 weapon.set_translation(self.view_matrix);
             self.jump_counter -= 1;
+        else:
+            self.view_matrix.eye.yPos = 0;
 
     def update_movement(self):
         if (self.w_key_pressed):
@@ -139,10 +145,12 @@ class Game:
         if(self.left_mouse_pressed):
             if(self.weapon_list[self.current_weapon_id].is_automatic()):
                 bullet = self.weapon_list[self.current_weapon_id].fire_gun(self.view_matrix);
-                self.bullet_list.append(bullet);
+                if(bullet != None):
+                    self.bullet_list.append(bullet);
             else:
                 bullet = self.weapon_list[self.current_weapon_id].fire_gun(self.view_matrix);
-                self.bullet_list.append(bullet);
+                if (bullet != None):
+                    self.bullet_list.append(bullet);
                 self.left_mouse_pressed = False;
 
         if (self.mouse_pos[0] < 100):
@@ -431,6 +439,35 @@ class Game:
     def change_weapon(self, weapon_id):
         self.current_weapon_id = weapon_id;
 
+    def repopulate_enemy_list(self):
+        self.enemy_population_timer += self.clock.tick();
+
+        if(self.enemy_population_timer >= 100):
+            enemy_model = obj_3D_loading.load_obj_file(sys.path[0] +
+                                                       '/Assets/Art/models', 'advancedCharacter.obj');
+            texture = self.load_texture_3D('/Assets/Art/models/skin_orc.png');
+            spawn_point = 0;
+
+            if(len(self.enemy_list) > 0):
+                for enemy in self.enemy_list:
+                    point = random.choice(self.spawn_points);
+
+                    if(enemy.get_location() != point):
+                        spawn_point = point;
+                        break;
+            else:
+                spawn_point = random.choice(self.spawn_points);
+
+            if(spawn_point != 0):
+                self.enemy_list.append(
+                    Enemy(enemy_model, texture, (0.0, 0.0, 0.0),
+                          (spawn_point.xPos, spawn_point.yPos, spawn_point.zPos),
+                          (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4
+                    )
+                );
+
+            self.enemy_population_timer = 0;
+
     def init_game(self):
         pygame.mixer.pre_init(44100, 16, 2, 4096);
         pygame.init();
@@ -487,54 +524,60 @@ class Game:
                                                 '/Assets/Art/models', 'advancedCharacter.obj');
         texture = self.load_texture_3D('/Assets/Art/models/skin_orc.png');
         self.enemy_list = [
-            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 20.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 7),
-            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 7),
-            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (0.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 7),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 20.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4),
         ];
+
+        self.spawn_points = [
+            Vector(20.0, 0.0, 20.0),
+            Vector(20.0, 0.0, 40.0),
+            Vector(20.0, 0.0, 30.0)
+        ]
 
     def init_weapons(self):
         weapon_list = [];
         gun_texture = '';
 
+        # Pistol
         gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/pistol_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'pistolSilencer.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 1, 50, self.view_matrix, False));
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 1, 0, self.view_matrix, False));
-
+        # Uzi
         gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/uzi_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'uzi.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 0.1, 2, self.view_matrix, True));
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 0.5, 1, self.view_matrix, True));
-
+        # Machine gun
         gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/machinegun_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'machinegun.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 0.2, 3, self.view_matrix, True));
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 1, 1, self.view_matrix, True));
-
+        # Shotgun
         gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/shotgun_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'shotgunShort.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 3, 200, self.view_matrix, False));
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 3, 0, self.view_matrix, False));
-
+        # Sniper
         gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/sniper_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'sniper.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
-
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 5, 5, self.view_matrix, False));
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 5, 400, self.view_matrix, False));
 
         return weapon_list;
 

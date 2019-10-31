@@ -69,6 +69,9 @@ class Enemy:
                          'z': self.rotation[2]}
         };
 
+    def get_location(self):
+        return self.location;
+
     def get_model(self):
         return self.model;
 
