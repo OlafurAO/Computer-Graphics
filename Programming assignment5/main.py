@@ -13,6 +13,7 @@ import obj_3D_loading;
 screen_size = (1200, 800);
 
 # All 3d models are found on the site https://www.kenney.nl
+# SFX from http://soundbible.com/
 
 # NOTE: this game utilizes mouse controls and works best with an actual mouse, rather than a touchpad
 class Game:
@@ -64,6 +65,7 @@ class Game:
         self.player_collision_direction = None;
 
         self.tex_id01 = self.load_texture_3D('/Assets/Art/test.jpg');
+        self.reticule_texture = self.load_texture_3D('/Assets/Art/reticule.png')
 
     def update(self):
         self.delta_time = self.clock.tick() / 1000;
@@ -191,6 +193,7 @@ class Game:
         glDisable(GL_BLEND);
 
     def draw_level(self):
+        glBindTexture(GL_TEXTURE_2D, self.reticule_texture);
         reticule_trans = self.reticule.get_transformations();
         self.draw_cube(reticule_trans['color'], reticule_trans['translation'],
                        reticule_trans['scale'], reticule_trans['rotation']);
@@ -211,7 +214,6 @@ class Game:
         for i in self.bullet_list:
             bullet = i.get_transformations();
             model = i.get_model();
-            self.draw_model(model, bullet['color'], bullet['translation'], bullet['scale'], bullet['rotation']);
 
         for i in self.enemy_list:
             glBindTexture(GL_TEXTURE_2D, i.get_texture());
@@ -238,7 +240,7 @@ class Game:
         self.model_matrix.pop_matrix();
 
     def draw_model(self, model, color, trans, scale, rotation):
-        self.shader.set_material_diffuse(Color(color['r'], color['g'], color['b']));
+        self.shader.set_material_diffuse(Color(color['r'], color['g'], color['b']), 1.0);
         self.model_matrix.push_matrix();
 
         self.model_matrix.add_translation(trans['x'], trans['y'], trans['z']);
@@ -294,10 +296,24 @@ class Game:
             if(pygame.mouse.get_pressed()[0]):
                 self.left_mouse_pressed = True;
                 self.gun_fire_timer = 0;
+
+            # Right mouse button
+            if(event.button == 3):
+                pass
+            # Scroll up
+            if(event.button == 4):
+                if(self.current_weapon_id < len(self.weapon_list) - 1):
+                    self.current_weapon_id += 1;
+            # Scroll down
+            elif(event.button == 5):
+                if(self.current_weapon_id > 0):
+                    self.current_weapon_id -= 1;
+
         elif(event.type == pygame.MOUSEBUTTONUP):
             if(event.button == 1):
                 self.left_mouse_pressed = False;
                 self.gun_fire_timer = 0;
+
 
         if(event.type == pygame.KEYDOWN):
             if(event.key == pygame.K_q):
@@ -416,6 +432,7 @@ class Game:
         self.current_weapon_id = weapon_id;
 
     def init_game(self):
+        pygame.mixer.pre_init(44100, 16, 2, 4096);
         pygame.init();
         self.game_display = pygame.display.set_mode(screen_size, pygame.OPENGL | pygame.DOUBLEBUF | pygame.OPENGLBLIT);
         pygame.mouse.set_cursor(
@@ -470,48 +487,54 @@ class Game:
                                                 '/Assets/Art/models', 'advancedCharacter.obj');
         texture = self.load_texture_3D('/Assets/Art/models/skin_orc.png');
         self.enemy_list = [
-            #Enemy((1.0, 1.0, 1.0), (1.0, 0.0, 5.0), (0.001, 3.0, 3.0), (0.0, 0.0, 0.0)),
-            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 20.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0)),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 20.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 7),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 7),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (0.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 7),
         ];
 
     def init_weapons(self):
         weapon_list = [];
         gun_texture = '';
 
+        gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/pistol_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'pistolSilencer.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 1, 0, self.view_matrix, False));
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 1, 0, self.view_matrix, False));
 
+        gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/uzi_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'uzi.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 0.5, 1, self.view_matrix, True));
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 0.5, 1, self.view_matrix, True));
 
+        gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/machinegun_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'machinegun.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 1, 1, self.view_matrix, True));
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 1, 1, self.view_matrix, True));
 
+        gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/shotgun_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'shotgunShort.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 3, 0, self.view_matrix, False));
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 3, 0, self.view_matrix, False));
 
+        gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/sniper_fire.wav');
         gun_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                  '/Assets/Art/models/weapons', 'sniper.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
 
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, 5, 5, self.view_matrix, False));
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 5, 5, self.view_matrix, False));
 
         return weapon_list;
 

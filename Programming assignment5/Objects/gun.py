@@ -2,10 +2,11 @@ import math;
 from Objects.objects import *;
 
 class Gun:
-    def __init__(self, model, bullet_model, texture, damage, fire_rate, view_matrix, automatic):
+    def __init__(self, model, bullet_model, texture, gunfire_sfx, damage, fire_rate, view_matrix, automatic):
         self.model = model;
         self.bullet_model = bullet_model;
         self.texture = texture;
+        self.gunfire_sfx = gunfire_sfx;
         self.damage = damage;
         self.fire_rate = fire_rate;
         self.automatic = automatic;
@@ -14,6 +15,8 @@ class Gun:
         self.coordinates = Vector(view_matrix.eye.xPos, view_matrix.eye.yPos - 1.0,
                                   view_matrix.eye.zPos - 2.5)
         self.rotation = -1.0;
+        self.rotation_x = 0.0;
+        self.fire_timer = 0;
 
     def player_move_x(self, speed):
         self.coordinates.xPos -= speed;
@@ -28,6 +31,16 @@ class Gun:
         self.coordinates = Vector(view_matrix.eye.xPos - 2, view_matrix.eye.yPos - 1.0,
                                   view_matrix.eye.zPos - 1.5)
         self.rotate_gun(view_matrix);
+
+        if(self.fire_timer > 0):
+            if(5 <= self.fire_timer <= 10):
+                self.rotation_x += 0.2;
+            else:
+                self.rotation_x -= 0.2;
+
+            self.fire_timer -= 1;
+        else:
+            self.cease_fire();
 
     def set_rotation(self, speed):
         self.rotation += speed;
@@ -46,7 +59,15 @@ class Gun:
         self.coordinates.zPos = z;
 
     def fire_gun(self, view_matrix):
+        if(self.fire_timer == 0):
+            self.fire_timer = 12;
+
+        self.gunfire_sfx.play();
+
         return Bullet(self.bullet_model, self.damage, view_matrix, self.rotation);
+
+    def cease_fire(self):
+        self.rotation_x = 0.0;
 
     def get_model(self):
         return self.model;
@@ -54,10 +75,10 @@ class Gun:
     def get_transformations(self):
         return {
             'color': {'r': 1.0, 'g': 1.0, 'b': 1.0},
-            'translation': {'x': self.coordinates.xPos, 'y': self.coordinates.yPos,
+            'translation': {'x': self.coordinates.xPos, 'y': self.coordinates.yPos + self.rotation_x,
                             'z': self.coordinates.zPos},
             'scale': {'x': 20.0, 'y': 20.0, 'z': 20.0},
-            'rotation': {'x': 0.0, 'y': self.rotation + 2 * math.pi/2, 'z': 0.0}
+            'rotation': {'x': -self.rotation_x, 'y': self.rotation + 2 * math.pi/2, 'z': 0.0}
         };
 
     def get_fire_rate(self):
@@ -78,15 +99,14 @@ class Reticule:
         self.location = view_matrix.eye + self.n * -1.5;
 
     def set_rotation(self, speed):
-        print('ye')
         self.rotation += speed;
 
     def get_transformations(self):
         return {
-            'color': {'r': 1.0, 'g': 0.0, 'b': 0.0},
+            'color': {'r': 1.0, 'g': 1.0, 'b': 1.0},
             'translation': {'x': self.location.xPos, 'y': self.location.yPos,
                             'z': self.location.zPos},
-            'scale': {'x': 0.05, 'y': 0.05, 'z': 0.05},
+            'scale': {'x': 0.025, 'y': 0.025, 'z': 0.01},
             'rotation': {'x': 0.0, 'y': self.rotation, 'z': 0.0}
         };
 
@@ -100,7 +120,7 @@ class Bullet:
 
         self.rotation = rotation;
 
-        self.bullet_speed = 100;
+        self.bullet_speed = 200;
 
         # On automatic fire, some bullets go through the walls.
         # That's why after a certain amount of time, the bullets
@@ -117,7 +137,7 @@ class Bullet:
     def get_transformations(self):
         return{
             'color': {'r': 0.0, 'g': 0.0, 'b': 0.0},
-            'translation': {'x': self.location.xPos, 'y': self.location.yPos - 1,
+            'translation': {'x': self.location.xPos, 'y': self.location.yPos,
                             'z': self.location.zPos},
             'scale': {'x': 100.0, 'y': 100.0, 'z': 100.0},
             'rotation': {'x': 0.0, 'y': self.rotation - math.pi/2, 'z': math.pi / 2}
@@ -146,8 +166,9 @@ class Bullet:
             enemy = i.get_transformations();
             trans = enemy['translation'];
             scale = enemy['scale'];
+            width = i.get_width();
 
-            if(trans['x'] - scale['x'] / 2 < self.location.xPos < trans['x'] + scale['x'] / 2):
-                if(trans['z'] - scale['z'] / 2 < self.location.zPos < trans['z'] + scale['z'] / 2):
+            if(trans['x'] - width / 2 < self.location.xPos < trans['x'] + width / 2):
+                if(trans['z'] - width / 2 < self.location.zPos < trans['z'] + width / 2):
                     i.damage_enemy(self.damage);
                     return True;
