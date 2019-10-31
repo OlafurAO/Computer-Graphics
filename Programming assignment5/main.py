@@ -46,6 +46,8 @@ class Game:
         self.current_weapon_id = 0;
         self.gun_fire_timer = 0;
 
+        self.reticule = Reticule(self.view_matrix);
+
         self.bullet_list = [];
 
         self.mouse_sensitivity = 5;
@@ -89,6 +91,8 @@ class Game:
 
             enemy.set_translation(self.view_matrix);
             enemy.set_rotation(self.view_matrix);
+
+        self.reticule.set_translation(self.view_matrix);
 
     def update_jump(self):
         if (30 < self.jump_counter <= 60):
@@ -187,6 +191,10 @@ class Game:
         glDisable(GL_BLEND);
 
     def draw_level(self):
+        reticule_trans = self.reticule.get_transformations();
+        self.draw_cube(reticule_trans['color'], reticule_trans['translation'],
+                       reticule_trans['scale'], reticule_trans['rotation']);
+
         glBindTexture(GL_TEXTURE_2D, self.tex_id01);
         for wall in self.level_list:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
@@ -210,7 +218,8 @@ class Game:
             enemy = i.get_transformations();
             model = i.get_model();
 
-            self.draw_model(model, enemy['color'], enemy['translation'], enemy['scale'], enemy['rotation']);
+            self.draw_model(model, enemy['color'], enemy['translation'],
+                            enemy['scale'], enemy['rotation']);
 
     def draw_cube(self, color, trans, scale, rotation):
         self.shader.set_material_diffuse(Color(color['r'], color['g'], color['b']), 1.0);
@@ -269,6 +278,8 @@ class Game:
                 for weapon in self.weapon_list:
                     weapon.set_rotation(self.delta_time * mouse_x_pos_movement);
 
+                self.reticule.set_rotation(self.delta_time * mouse_x_pos_movement)
+
             elif(new_mouse_pos[0] < self.mouse_pos[0]):
                 mouse_x_pos_movement = self.mouse_pos[0] - new_mouse_pos[0];
                 self.view_matrix.yaw(-self.delta_time * mouse_x_pos_movement);
@@ -276,6 +287,8 @@ class Game:
 
                 for weapon in self.weapon_list:
                     weapon.set_rotation(-self.delta_time * mouse_x_pos_movement);
+
+                self.reticule.set_rotation(-self.delta_time * mouse_x_pos_movement)
 
         if(event.type == pygame.MOUSEBUTTONDOWN):
             if(pygame.mouse.get_pressed()[0]):

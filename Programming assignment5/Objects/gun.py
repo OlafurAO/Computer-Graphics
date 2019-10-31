@@ -67,6 +67,30 @@ class Gun:
         return self.automatic;
 
 
+class Reticule:
+    def __init__(self, view_matrix):
+        self.n = view_matrix.n;
+        self.location = view_matrix.eye + self.n * -0.5;
+        self.rotation = -1;
+
+    def set_translation(self, view_matrix):
+        self.n = view_matrix.n;
+        self.location = view_matrix.eye + self.n * -1.5;
+
+    def set_rotation(self, speed):
+        print('ye')
+        self.rotation += speed;
+
+    def get_transformations(self):
+        return {
+            'color': {'r': 1.0, 'g': 0.0, 'b': 0.0},
+            'translation': {'x': self.location.xPos, 'y': self.location.yPos,
+                            'z': self.location.zPos},
+            'scale': {'x': 0.05, 'y': 0.05, 'z': 0.05},
+            'rotation': {'x': 0.0, 'y': self.rotation, 'z': 0.0}
+        };
+
+
 class Bullet:
     def __init__(self, model, damage, view_matrix, rotation):
         self.model = model;
