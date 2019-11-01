@@ -218,7 +218,8 @@ class MeshModel:
         for mesh_id in self.mesh_materials.keys():
             self.vertex_buffer_ids[mesh_id] = glGenBuffers(1)
             glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer_ids[mesh_id])
-            glBufferData(GL_ARRAY_BUFFER, numpy.array(self.vertex_arrays[mesh_id], dtype='float32'), GL_STATIC_DRAW)
+            glBufferData(GL_ARRAY_BUFFER, numpy.array(self.vertex_arrays[mesh_id],
+                                                      dtype='float32'), GL_STATIC_DRAW)
             glBindBuffer(GL_ARRAY_BUFFER, 0)
 
     def draw(self, shader):

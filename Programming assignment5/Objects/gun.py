@@ -35,9 +35,9 @@ class Gun:
 
         if(self.fire_timer > 0):
             if(5 <= self.fire_timer <= 10):
-                self.rotation_x += 0.2;
+                self.rotation_x += 0.1;
             else:
-                self.rotation_x -= 0.2;
+                self.rotation_x -= 0.1;
 
             self.fire_timer -= 1;
         else:

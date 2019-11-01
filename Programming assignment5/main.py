@@ -67,8 +67,8 @@ class Game:
 
         self.enemy_population_timer = 0;
 
-        self.tex_id01 = self.load_texture_3D('/Assets/Art/test.jpg');
-        self.reticule_texture = self.load_texture_3D('/Assets/Art/reticule.png')
+        self.tex_id01 = self.load_texture_3D('/Assets/Art/test2.jpg');
+        self.reticule_texture = self.load_texture_3D('/Assets/Art/reticule.png');
 
     def update(self):
         self.delta_time = self.clock.tick() / 1000;
@@ -181,9 +181,13 @@ class Game:
 
         self.shader.set_eye_position(self.view_matrix.eye);
 
-        self.shader.set_light_position(Point(0.0, 10.0, 0.0));
+        self.shader.set_light_position(Point(0.0, 20.0, 0.0));
         self.shader.set_light_diffuse(Color(1.0, 1.0, 1.0));
         self.shader.set_light_specular(Color(1.0, 1.0, 1.0));
+
+        self.shader.set_light_position_2(Point(10.0, 20.0, 0.0));
+        self.shader.set_light_diffuse_2(Color(1.0, 1.0, 1.0));
+        self.shader.set_light_specular_2(Color(1.0, 1.0, 1.0));
 
         self.shader.set_material_specular(Color(1.0, 1.0, 1.0));
         self.shader.set_material_shininess(25);
@@ -321,7 +325,6 @@ class Game:
             if(event.button == 1):
                 self.left_mouse_pressed = False;
                 self.gun_fire_timer = 0;
-
 
         if(event.type == pygame.KEYDOWN):
             if(event.key == pygame.K_q):
@@ -495,29 +498,29 @@ class Game:
 
     def init_level(self):
         self.level_list = [
-            {'color': {'r': 1.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': -7.0},
-             'scale': {'x': 41.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': -7.0},
+             'scale': {'x': 41.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
-            {'color': {'r': 0.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 8.0, 'y': 0.0, 'z': 0.0},
-             'scale': {'x': 15.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 8.0, 'y': 0.0, 'z': 0.0},
+             'scale': {'x': 15.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
-            {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': -10.0, 'y': 0.0, 'z': 12.0},
-             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -10.0, 'y': 0.0, 'z': 12.0},
+             'scale': {'x': 40.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
-            {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 0.0, 'y': 0.0, 'z': 31.0},
-             'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 0.0, 'y': 0.0, 'z': 31.0},
+             'scale': {'x': 20.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
-            {'color': {'r': 0.5, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': 25.0},
-             'scale': {'x': 20.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': 25.0},
+             'scale': {'x': 20.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
-            {'color': {'r': 0.0, 'g': 1.0, 'b': 0.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 25.0},
-             'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 25.0},
+             'scale': {'x': 80.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
-            {'color': {'r': 0.0, 'g': 0.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 60.0},
-             'scale': {'x': 80.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 60.0},
+             'scale': {'x': 80.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
-            {'color': {'r': 0.5, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
-             'scale': {'x': 40.0, 'y': 5.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}}
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
+             'scale': {'x': 40.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}}
         ];
 
         enemy_model = obj_3D_loading.load_obj_file(sys.path[0] +
@@ -553,7 +556,7 @@ class Game:
                                                  '/Assets/Art/models/weapons', 'uzi.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 0.1, 2, self.view_matrix, True));
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 0.5, 10, self.view_matrix, True));
 
         # Machine gun
         gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/machinegun_fire.wav');
@@ -561,7 +564,7 @@ class Game:
                                                  '/Assets/Art/models/weapons', 'machinegun.obj');
         bullet_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                     '/Assets/Art/models/weapons', 'ammo_pistol.obj');
-        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 0.2, 3, self.view_matrix, True));
+        weapon_list.append(Gun(gun_model, bullet_model, gun_texture, gunfire_sfx, 0.5, 15, self.view_matrix, True));
 
         # Shotgun
         gunfire_sfx = pygame.mixer.Sound(sys.path[0] + '/Assets/Audio/SFX/Weapons/shotgun_fire.wav');

@@ -53,6 +53,10 @@ class Shader3D:
         self.light_diffuse_location             = glGetUniformLocation(self.renderer, 'u_light_diffuse');
         self.light_specular_location            = glGetUniformLocation(self.renderer, 'u_light_specular');
 
+        self.light_pos_location_2               = glGetUniformLocation(self.renderer, 'u_light_position_2');
+        self.light_diffuse_location_2           = glGetUniformLocation(self.renderer, 'u_light_diffuse_2');
+        self.light_specular_location_2          = glGetUniformLocation(self.renderer, 'u_light_specular_2');
+
         self.material_diffuse_location          = glGetUniformLocation(self.renderer, 'u_material_diffuse');
         self.material_specular_location         = glGetUniformLocation(self.renderer, 'u_material_specular');
         self.material_shininess_location        = glGetUniformLocation(self.renderer, 'u_material_shininess');
@@ -84,6 +88,15 @@ class Shader3D:
 
     def set_light_specular(self, color):
         glUniform4f(self.light_specular_location, color.r, color.g, color.b, 1.0);
+
+    def set_light_position_2(self, pos):
+        glUniform4f(self.light_pos_location_2, pos.xPos, pos.yPos, pos.zPos, 1.0);
+
+    def set_light_diffuse_2(self, color):
+        glUniform4f(self.light_diffuse_location_2, color.r, color.g, color.b, 1.0);
+
+    def set_light_specular_2(self, color):
+        glUniform4f(self.light_specular_location_2, color.r, color.g, color.b, 1.0);
 
     def set_material_diffuse(self, color, alpha=1.0):
         glUniform4f(self.material_diffuse_location, color.r, color.g, color.b, alpha);
