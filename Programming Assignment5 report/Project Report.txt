@@ -1,0 +1,70 @@
+===================
+The Game
+===================
+Survival FPS game.
+
+You control a character with an assortment of weapons at his 
+disposal, trying to survive against a horde of monsters. If 
+you get hit by a monster 3 times, you die and the game 
+is over. Monster spawn points are initialized at the 
+beginning of the game and a new monster will spawn at one of 
+them every 3 seconds or so. The monsters are quite slow but 
+it's easy to get snuck up on if you neglect to look
+behind you. You can also be unlucky enough to be standing on 
+a monster's spawn point when it appears, so it's best to be 
+on the move the entire time. The monsters have 5 hitpoints.
+
+===================
+Controls
+===================
+Mouse: Look around (only horizontal mouse controls)
+Left Mouse Button: Fire weapon
+Mouse wheel wheel (up/down): Switch weapons
+
+WASD: Move player
+SHIFT: Sprint
+SPACE: Jump
+Number keys (1-5): Switch weapons
+
+===================
+Weapons
+===================
+1: Pistol, 1 damage, relatively high fire rate
+2: SMG, 0.5 damage, very high fire rate
+3: Machine gun, 0.5 damage, very high fire rate
+4: Shotgun, 3 damage, slow fire rate
+5: Sniper, 5 damage (insta kill), very slow fire rate.
+
+==========================
+Stuff I'd like to have done/fixed (given more time)
+==========================
+- Fix the health bar, it gets messed up when weapons
+  other than the pistol is selected.
+
+- Have an actual level instead of just one big room
+
+- Have the player start with just the pistol
+  and make him have to collect better weapons 
+  throughout the game
+
+- Have some more interesting weapons, maybe area
+  of effect ones like grenades.
+
+- Have ammo and a reload mechanic to make the game
+  more challenging.
+
+- Have more interesting environments instead of just walls
+
+- Texture map the enemies properly
+
+- Have more enemy variety
+
+- Make the enemy AI smarter and implement wall collision
+  for the enemies. 
+
+- Make the game more graphically appealing, better lighting,
+  maybe a flashlight mechanic.
+
+- Have an indicator for when enemies get hurt, they could
+  for example flash red or make a noise. Maybe also display
+  a health bar above their heads. 

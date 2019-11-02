@@ -10,7 +10,6 @@ from Matrix.matrix import *;
 from Objects.gun import *;
 from Objects.enemy import *;
 from Objects.health import *;
-from Effects.particles import *;
 import obj_3D_loading;
 
 screen_size = (1200, 800);
@@ -33,31 +32,6 @@ class Game:
         self.projection_matrix = Projection_Matrix();
 
         self.view_matrix.view(Point(-5, 0, 3), Point(0, 0, 0), Vector(0, 1, 0));
-        #self.view_matrix.view(Point(190, 0, 20), Point(0, 0, 0), Vector(0, 1, 0));
-
-        #Point(50, 0, 3)
-        #Point(50, 0, 40)
-        #Point(10, 0, 40)
-        #Point(60, 0, 40)
-        #Point(80, 0, 40)
-        #Point(80, 0, 20)
-        #Point(180, 0, 20)
-        #Point(120, 0, 20)
-        #Point(140, 0, 20)
-        #Point(160, 0, 20)
-        #Point(190, 0, 20)
-        # Point(180, 0, 40)
-        # Point(120, 0, 40)
-        # Point(140, 0, 40)
-        # Point(160, 0, 40)
-        # Point(190, 0, 30)
-        # Point(180, 0, 30)
-        # Point(120, 0, 30)
-        # Point(140, 0, 30)
-        # Point(160, 0, 30)
-        # Point(190, 0, 30)
-
-
 
         self.projection_matrix.set_perspective(math.pi / 2, screen_size[0] / screen_size[1], 0.5, 100);
 
@@ -93,6 +67,7 @@ class Game:
 
         self.game_over = False;
         self.player_sprinting = False;
+        self.player_hurt = False;
 
         self.player_direction = 0;
         self.player_collision_direction = None;
@@ -102,6 +77,7 @@ class Game:
 
         self.tex_id01 = self.load_texture_3D('/Assets/Art/test2.jpg');
         self.reticule_texture = self.load_texture_3D('/Assets/Art/reticule.png');
+        self.damage_texture = self.load_texture_3D('/Assets/Art/damage.jpg');
 
     def update(self):
         if(self.player_health == 0):
@@ -136,7 +112,7 @@ class Game:
                 if(self.player_damage_counter == 0):
                     self.player_damage_counter = 200;
                     self.player_health -= 1;
-                    print(self.player_health);
+                    self.player_hurt = True;
                 else:
                     self.player_damage_counter -= 1;
 
@@ -217,7 +193,13 @@ class Game:
     def display(self):
         glEnable(GL_DEPTH_TEST);
 
-        glClearColor(0.0, 0.0, 0.0, 1.0);
+        if(self.player_hurt):
+            glBindTexture(GL_TEXTURE_2D, self.damage_texture);
+            glClearColor(1.0, 0.0, 0.0, 1.0);
+            self.player_hurt = False;
+        else:
+            glClearColor(0.0, 0.0, 0.0, 1.0);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, screen_size[0], screen_size[1]);
 
@@ -328,12 +310,15 @@ class Game:
 
         cube_rotation = self.health_cube.get_rotation();
 
-        cube = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0},
-                'translation': {'x': trans['x'], 'y': trans['y'], 'z': trans['z']},
-                'scale': {'x': scale['x'], 'y': scale['y'],
-                          'z': scale['z'] + self.player_health * 10},
-                'rotation': {'x': 0.0, 'y': cube_rotation + math.pi/2, 'z': -0.3}};
+        cube = {
+            'color': {'r': 1.0, 'g': 1.0, 'b': 1.0},
+            'translation': {'x': trans['x'], 'y': trans['y'], 'z': trans['z']},
+            'scale': {'x': scale['x'], 'y': scale['y'],
+                      'z': scale['z'] + self.player_health * 10},
+            'rotation': {'x': 0.0, 'y': cube_rotation + math.pi/2, 'z': -0.3}
+        };
 
+        glBindTexture(GL_TEXTURE_2D, self.damage_texture);
         self.draw_cube(cube['color'], cube['translation'], cube['scale'], cube['rotation']);
 
     def game_loop(self):
@@ -516,7 +501,7 @@ class Game:
     def repopulate_enemy_list(self):
         self.enemy_population_timer += self.clock.tick();
 
-        if(self.enemy_population_timer >= 50):
+        if(self.enemy_population_timer >= 70):
             enemy_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                        '/Assets/Art/models', 'advancedCharacter.obj');
             texture = self.load_texture_3D('/Assets/Art/models/skin_orc.png');
@@ -578,6 +563,12 @@ class Game:
             {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 82.0, 'y': 0.0, 'z': -7.0},
              'scale': {'x': 41.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 123.0, 'y': 0.0, 'z': -7.0},
+             'scale': {'x': 41.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 164.0, 'y': 0.0, 'z': -7.0},
+             'scale': {'x': 81.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+
             {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 8.0, 'y': 0.0, 'z': 0.0},
              'scale': {'x': 15.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
@@ -612,7 +603,8 @@ class Game:
         self.enemy_list = [
             Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 20.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4),
             Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4),
-            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (20.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (40.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4),
+            Enemy(enemy_model, texture, (0.0, 0.0, 0.0), (50.0, 0.0, 40.0), (0.5, 0.2, 0.5), (0.0, 0.0, 0.0), 4),
         ];
 
         self.spawn_points = [
@@ -680,25 +672,6 @@ class Game:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_string);
-
-        return tex_id;
-
-    def load_texture_2D(self, img_path):
-        surface = pygame.image.load(sys.path[0] + img_path).convert_alpha();
-        tex_string = pygame.image.tostring(surface, 'RGBA', 1);
-        width = surface.get_width();
-        height = surface.get_height();
-        tex_id = glGenTextures(1);
-
-        glBindTexture(GL_TEXTURE_2D, tex_id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, tex_string)
-
-        glBindTexture(GL_TEXTURE_2D, 0);
 
         return tex_id;
 
