@@ -12,7 +12,11 @@ uniform float u_using_texture;
 
 varying vec4 v_normal;
 varying vec4 v_s;
+varying vec4 v_s2;
+
 varying vec4 v_h;
+varying vec4 v_h2;
+
 varying vec2 v_uv;
 
 void main(void) {
@@ -31,8 +35,18 @@ void main(void) {
     float lambert = max(dot(v_normal, v_s) / (n_len * s_len), 0);
     float phong = max(dot(v_normal, v_h) / (n_len * h_len), 0);
 
-    gl_FragColor = u_light_diffuse * material_diffuse * lambert
+    float lambert2 = max(dot(v_normal, v_s2) / (n_len * s_len), 0);
+    float phong2 = max(dot(v_normal, v_h2) / (n_len * h_len), 0);
+
+    /*
+    gl_FragColor =  (lambert + lambert2) * u_light_diffuse * material_diffuse  +
+			 (pow(phong, u_material_shininess) + pow(phong2, u_material_shininess)) * u_light_specular
+             * material_specular;
+    */
+
+    gl_FragColor = u_light_diffuse * material_diffuse * (lambert + lambert2)
         + u_light_specular * u_material_specular * pow(phong, u_material_shininess);
+
 
     gl_FragColor.a = u_material_diffuse.a;
 }

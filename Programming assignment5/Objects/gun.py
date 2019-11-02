@@ -19,15 +19,6 @@ class Gun:
         self.fire_timer = 0;
         self.fire_rate_timer = 0;
 
-    def player_move_x(self, speed):
-        self.coordinates.xPos -= speed;
-
-    def player_move_y(self, speed):
-        self.coordinates.yPos += speed;
-
-    def player_move_z(self, speed):
-        self.coordinates.zPos -= speed;
-
     def set_translation(self, view_matrix):
         self.coordinates = Vector(view_matrix.eye.xPos - 2, view_matrix.eye.yPos - 1.0,
                                   view_matrix.eye.zPos - 1.5)
@@ -130,7 +121,7 @@ class Bullet:
 
         # On automatic fire, some bullets go through the walls.
         # That's why after a certain amount of time, the bullets
-        # are removed from the bullet list
+        # are removed from the bullet list to prevent slowdown
         self.bullet_time = 0;
 
     def update_movement(self, delta_time):
@@ -171,7 +162,6 @@ class Bullet:
         for i in enemy_list:
             enemy = i.get_transformations();
             trans = enemy['translation'];
-            scale = enemy['scale'];
             width = i.get_width();
 
             if(trans['x'] - width / 2 < self.location.xPos < trans['x'] + width / 2):

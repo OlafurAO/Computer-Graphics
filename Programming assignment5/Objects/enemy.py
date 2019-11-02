@@ -21,19 +21,19 @@ class Enemy:
         self.enemy_dead = False;
         self.aggroed = False;
 
-    def set_translation(self, player_view_matrix):
+    def set_translation(self, player_view_matrix, wall_list):
         eye = player_view_matrix.eye;
         distance = self.get_distance_to_player(eye);
 
         if(distance < 20 or self.aggroed):
-            if(eye.xPos > self.location.xPos):
+            if(eye.xPos >= self.location.xPos + 1):
                 self.location.xPos += self.speed;
-            elif(eye.xPos < self.location.xPos):
+            elif(eye.xPos <= self.location.xPos - 1):
                 self.location.xPos -= self.speed;
 
-            if(eye.zPos > self.location.zPos):
+            if(eye.zPos >= self.location.zPos + 1):
                 self.location.zPos += self.speed;
-            elif(eye.zPos < self.location.zPos):
+            elif(eye.zPos <= self.location.zPos - 1):
                 self.location.zPos -= self.speed;
 
         if(self.is_dying()):

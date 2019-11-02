@@ -9,6 +9,8 @@ from Shaders.shaders import *;
 from Matrix.matrix import *;
 from Objects.gun import *;
 from Objects.enemy import *;
+from Objects.health import *;
+from Effects.particles import *;
 import obj_3D_loading;
 
 screen_size = (1200, 800);
@@ -55,6 +57,10 @@ class Game:
         self.mouse_sensitivity = 5;
         self.angle = 0;
 
+        self.health_cube = Health(self.view_matrix);
+        self.player_health = 3;
+        self.player_damage_counter = 0;
+
         self.player_speed = 10;
         self.jump_speed = 10;
         self.jump_counter = 0;
@@ -71,6 +77,9 @@ class Game:
         self.reticule_texture = self.load_texture_3D('/Assets/Art/reticule.png');
 
     def update(self):
+        if(self.player_health == 0):
+            self.game_over = True;
+
         self.delta_time = self.clock.tick() / 1000;
         self.angle += math.pi * self.delta_time;
         self.mouse_pos = list(pygame.mouse.get_pos());
@@ -94,7 +103,17 @@ class Game:
             if(enemy.is_dead()):
                 self.enemy_list.remove(enemy);
 
-            enemy.set_translation(self.view_matrix);
+            enemy_location = enemy.get_location();
+            if(enemy_location.xPos - 2 <= self.view_matrix.eye.xPos <= enemy_location.xPos + 2
+               and enemy_location.zPos - 2 <= self.view_matrix.eye.zPos <= enemy_location.zPos + 2):
+                if(self.player_damage_counter == 0):
+                    self.player_damage_counter = 200;
+                    self.player_health -= 1;
+                    print(self.player_health);
+                else:
+                    self.player_damage_counter -= 1;
+
+            enemy.set_translation(self.view_matrix, self.level_list);
             enemy.set_rotation(self.view_matrix);
 
         self.reticule.set_translation(self.view_matrix);
@@ -138,6 +157,7 @@ class Game:
             else:
                 self.view_matrix.slide(self.player_speed * self.delta_time, 0, 0);
 
+        self.health_cube.set_translation(self.view_matrix);
         for weapon in self.weapon_list:
             weapon.set_translation(self.view_matrix);
 
@@ -203,6 +223,7 @@ class Game:
         pygame.display.flip();
 
         glDisable(GL_BLEND);
+        glDisable(GL_CULL_FACE);
 
     def draw_level(self):
         glBindTexture(GL_TEXTURE_2D, self.reticule_texture);
@@ -222,6 +243,8 @@ class Game:
         gun_model = self.weapon_list[self.current_weapon_id].get_model();
         self.draw_model(gun_model, gun_trans['color'], gun_trans['translation'],
                         gun_trans['scale'], gun_trans['rotation']);
+
+        self.draw_player_health();
 
         for i in self.bullet_list:
             bullet = i.get_transformations();
@@ -267,6 +290,21 @@ class Game:
         model.draw(self.shader)
         self.model_matrix.pop_matrix();
 
+    def draw_player_health(self):
+        cube = self.health_cube.get_transformations();
+        trans = cube['translation'];
+        scale = cube['scale'];
+
+        cube_rotation = self.health_cube.get_rotation();
+
+        cube = {'color': {'r': 1.0, 'g': 0.0, 'b': 0.0},
+                'translation': {'x': trans['x'], 'y': trans['y'], 'z': trans['z']},
+                'scale': {'x': scale['x'], 'y': scale['y'],
+                          'z': scale['z'] + self.player_health * 10},
+                'rotation': {'x': 0.0, 'y': cube_rotation + math.pi/2, 'z': -0.3}};
+
+        self.draw_cube(cube['color'], cube['translation'], cube['scale'], cube['rotation']);
+
     def game_loop(self):
         while not self.game_over:
             self.input_handler();
@@ -292,7 +330,8 @@ class Game:
                 for weapon in self.weapon_list:
                     weapon.set_rotation(self.delta_time * mouse_x_pos_movement);
 
-                self.reticule.set_rotation(self.delta_time * mouse_x_pos_movement)
+                self.reticule.set_rotation(self.delta_time * mouse_x_pos_movement);
+                self.health_cube.set_rotation(self.delta_time * mouse_x_pos_movement);
 
             elif(new_mouse_pos[0] < self.mouse_pos[0]):
                 mouse_x_pos_movement = self.mouse_pos[0] - new_mouse_pos[0];
@@ -302,7 +341,8 @@ class Game:
                 for weapon in self.weapon_list:
                     weapon.set_rotation(-self.delta_time * mouse_x_pos_movement);
 
-                self.reticule.set_rotation(-self.delta_time * mouse_x_pos_movement)
+                self.reticule.set_rotation(-self.delta_time * mouse_x_pos_movement);
+                self.health_cube.set_rotation(-self.delta_time * mouse_x_pos_movement);
 
         if(event.type == pygame.MOUSEBUTTONDOWN):
             if(pygame.mouse.get_pressed()[0]):
