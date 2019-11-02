@@ -33,6 +33,32 @@ class Game:
         self.projection_matrix = Projection_Matrix();
 
         self.view_matrix.view(Point(-5, 0, 3), Point(0, 0, 0), Vector(0, 1, 0));
+        #self.view_matrix.view(Point(190, 0, 20), Point(0, 0, 0), Vector(0, 1, 0));
+
+        #Point(50, 0, 3)
+        #Point(50, 0, 40)
+        #Point(10, 0, 40)
+        #Point(60, 0, 40)
+        #Point(80, 0, 40)
+        #Point(80, 0, 20)
+        #Point(180, 0, 20)
+        #Point(120, 0, 20)
+        #Point(140, 0, 20)
+        #Point(160, 0, 20)
+        #Point(190, 0, 20)
+        # Point(180, 0, 40)
+        # Point(120, 0, 40)
+        # Point(140, 0, 40)
+        # Point(160, 0, 40)
+        # Point(190, 0, 30)
+        # Point(180, 0, 30)
+        # Point(120, 0, 30)
+        # Point(140, 0, 30)
+        # Point(160, 0, 30)
+        # Point(190, 0, 30)
+
+
+
         self.projection_matrix.set_perspective(math.pi / 2, screen_size[0] / screen_size[1], 0.5, 100);
 
         self.shader.set_view_matrix(self.view_matrix.get_matrix());
@@ -72,6 +98,7 @@ class Game:
         self.player_collision_direction = None;
 
         self.enemy_population_timer = 0;
+        self.enemy_max_count = 20;
 
         self.tex_id01 = self.load_texture_3D('/Assets/Art/test2.jpg');
         self.reticule_texture = self.load_texture_3D('/Assets/Art/reticule.png');
@@ -205,7 +232,7 @@ class Game:
         self.shader.set_light_diffuse(Color(1.0, 1.0, 1.0));
         self.shader.set_light_specular(Color(1.0, 1.0, 1.0));
 
-        self.shader.set_light_position_2(Point(10.0, 20.0, 0.0));
+        self.shader.set_light_position_2(Point(50.0, 20.0, 0.0));
         self.shader.set_light_diffuse_2(Color(1.0, 1.0, 1.0));
         self.shader.set_light_specular_2(Color(1.0, 1.0, 1.0));
 
@@ -236,7 +263,15 @@ class Game:
             self.draw_cube(wall['color'], wall['translation'], wall['scale'], wall['rotation']);
 
         floor = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': -3.0, 'z': 27.0},
-                 'scale': {'x': 41.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
+                 'scale': {'x': 100.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
+        self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
+
+        floor = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 100.0, 'y': -3.0, 'z': 27.0},
+                 'scale': {'x': 100.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
+        self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
+
+        floor = {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 200.0, 'y': -3.0, 'z': 27.0},
+                 'scale': {'x': 100.0, 'y': 3.0, 'z': 70.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}};
         self.draw_cube(floor['color'], floor['translation'], floor['scale'], floor['rotation']);
 
         gun_trans = self.weapon_list[self.current_weapon_id].get_transformations();
@@ -245,10 +280,6 @@ class Game:
                         gun_trans['scale'], gun_trans['rotation']);
 
         self.draw_player_health();
-
-        for i in self.bullet_list:
-            bullet = i.get_transformations();
-            model = i.get_model();
 
         for i in self.enemy_list:
             glBindTexture(GL_TEXTURE_2D, i.get_texture());
@@ -485,7 +516,7 @@ class Game:
     def repopulate_enemy_list(self):
         self.enemy_population_timer += self.clock.tick();
 
-        if(self.enemy_population_timer >= 100):
+        if(self.enemy_population_timer >= 50):
             enemy_model = obj_3D_loading.load_obj_file(sys.path[0] +
                                                        '/Assets/Art/models', 'advancedCharacter.obj');
             texture = self.load_texture_3D('/Assets/Art/models/skin_orc.png');
@@ -501,7 +532,7 @@ class Game:
             else:
                 spawn_point = random.choice(self.spawn_points);
 
-            if(spawn_point != 0):
+            if(spawn_point != 0 and len(self.enemy_list) < self.enemy_max_count):
                 self.enemy_list.append(
                     Enemy(enemy_model, texture, (0.0, 0.0, 0.0),
                           (spawn_point.xPos, spawn_point.yPos, spawn_point.zPos),
@@ -541,6 +572,12 @@ class Game:
             {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': -7.0},
              'scale': {'x': 41.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 41.0, 'y': 0.0, 'z': -7.0},
+             'scale': {'x': 41.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 82.0, 'y': 0.0, 'z': -7.0},
+             'scale': {'x': 41.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+
             {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 8.0, 'y': 0.0, 'z': 0.0},
              'scale': {'x': 15.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
@@ -553,12 +590,18 @@ class Game:
             {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 10.0, 'y': 0.0, 'z': 25.0},
              'scale': {'x': 20.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
-            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 25.0},
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 200.0, 'y': 0.0, 'z': 25.0},
              'scale': {'x': 80.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}},
 
             {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 30.0, 'y': 0.0, 'z': 60.0},
              'scale': {'x': 80.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
 
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 110.0, 'y': 0.0, 'z': 60.0},
+             'scale': {'x': 80.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+
+            {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': 190.0, 'y': 0.0, 'z': 60.0},
+             'scale': {'x': 80.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0}},
+###############
             {'color': {'r': 1.0, 'g': 1.0, 'b': 1.0}, 'translation': {'x': -9.0, 'y': 0.0, 'z': 50.0},
              'scale': {'x': 40.0, 'y': 15.0, 'z': 1.0}, 'rotation': {'x': 0.0, 'y': math.pi/2, 'z': 0.0}}
         ];
@@ -573,10 +616,13 @@ class Game:
         ];
 
         self.spawn_points = [
-            Vector(20.0, 0.0, 20.0),
-            Vector(20.0, 0.0, 40.0),
-            Vector(20.0, 0.0, 30.0)
-        ]
+            Point(20, 0, 20), Point(20, 0, 40), Point(20, 0, 30), Point(50, 0, 3),
+            Point(50, 0, 40), Point(10, 0, 40), Point(60, 0, 40), Point(80, 0, 40),
+            Point(80, 0, 20), Point(180, 0, 20),Point(120, 0, 20),Point(140, 0, 20),
+            Point(160, 0, 20), Point(190, 0, 20), Point(180, 0, 40), Point(120, 0, 40),
+            Point(140, 0, 40), Point(160, 0, 40), Point(190, 0, 30), Point(180, 0, 30),
+            Point(120, 0, 30), Point(140, 0, 30), Point(160, 0, 30), Point(190, 0, 30)
+        ];
 
     def init_weapons(self):
         weapon_list = [];

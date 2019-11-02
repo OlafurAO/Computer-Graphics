@@ -12,7 +12,7 @@ class Enemy:
         self.width = width;
 
         self.health = 5;
-        self.speed = 0.01;
+        self.speed = 0.03;
 
         self.death_rotation = 0.0;
         self.death_timer = 0;
@@ -25,7 +25,7 @@ class Enemy:
         eye = player_view_matrix.eye;
         distance = self.get_distance_to_player(eye);
 
-        if(distance < 20 or self.aggroed):
+        if(distance < 40 or self.aggroed):
             if(eye.xPos >= self.location.xPos + 1):
                 self.location.xPos += self.speed;
             elif(eye.xPos <= self.location.xPos - 1):

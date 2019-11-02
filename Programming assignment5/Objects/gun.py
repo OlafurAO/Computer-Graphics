@@ -160,6 +160,9 @@ class Bullet:
 
     def enemy_collision_check(self, enemy_list):
         for i in enemy_list:
+            if(i.is_dying()):
+                return False;
+
             enemy = i.get_transformations();
             trans = enemy['translation'];
             width = i.get_width();
